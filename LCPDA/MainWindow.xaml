@@ -1,0 +1,63 @@
+﻿<Window x:Class="LCPDA.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:LCPDA"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="550" Width="800">
+    <Grid>
+        <!-- Top Frame -->
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="10" HorizontalAlignment="Center">
+            <Button x:Name="SelectFileButton" Content="Select File" Width="100" FontSize="12"/>
+            <TextBox x:Name="FilePathTextBox" Width="550" FontSize="12" Margin="5 0 5 0"/>
+            <Button x:Name="ReadFileButton" Content="Load File" Width="100" FontSize="12"/>
+        </StackPanel>
+
+        <!-- Main Content Area (for Chromatogram and Spectrum Canvas) -->
+        <Grid Margin="10,60,10,10">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!-- First Frame (Chromatogram Canvas) -->
+            <Border BorderBrush="Black" BorderThickness="1" Grid.Row="0">
+                <!-- Placeholder for plot (use image or external control for actual plot) -->
+                <Canvas x:Name="ChromatogramCanvas" Background="LightGray" Height="200"/>
+            </Border>
+
+            <!-- Second Frame (Settings Controls for Min RT, Max RT, etc.) -->
+            <Grid Grid.Row="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <RadioButton x:Name="OneDRadio" Content="1D" Grid.Row="0" GroupName="PlotType" IsChecked="True" FontSize="12"/>
+                <RadioButton x:Name="TwoDRadio" Content="2D" Grid.Row="1" GroupName="PlotType" FontSize="12"/>
+                <TextBlock Text="Min RT" Grid.Row="2" FontSize="12"/>
+                <TextBox x:Name="MinRTTextBox" Grid.Row="2" Width="50" Text="0" HorizontalAlignment="Left" FontSize="12"/>
+                <TextBlock Text="Max RT" Grid.Row="3" FontSize="12"/>
+                <TextBox x:Name="MaxRTTextBox" Grid.Row="3" Width="50" Text="20" HorizontalAlignment="Left" FontSize="12"/>
+                <TextBlock Text="Min WL" Grid.Row="4" FontSize="12"/>
+                <TextBox x:Name="MinWLTextBox" Grid.Row="4" Width="50" Text="200" HorizontalAlignment="Left" FontSize="12"/>
+                <TextBlock Text="Max WL" Grid.Row="5" FontSize="12"/>
+                <TextBox x:Name="MaxWLTextBox" Grid.Row="5" Width="50" Text="600" HorizontalAlignment="Left" FontSize="12"/>
+                <TextBlock Text="Scan #" Grid.Row="6" FontSize="12"/>
+                <TextBox x:Name="CurrentScanTextBox" Grid.Row="6" Width="50" Text="1" HorizontalAlignment="Left" FontSize="12"/>
+            </Grid>
+
+            <!-- Bottom Frame -->
+            <StackPanel Orientation="Horizontal" Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="10">
+                <Button x:Name="SaveSpectrumButton" Content="Save Spectrum Figure" Width="150" FontSize="12"/>
+                <Button x:Name="SaveChromatogramButton" Content="Save Chromatogram Figure" Width="200" FontSize="12" Margin="5 0 5 0"/>
+                <Button x:Name="SaveDataButton" Content="Save All Data as Text" Width="200" FontSize="12"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>
