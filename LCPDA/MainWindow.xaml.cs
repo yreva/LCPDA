@@ -9,16 +9,18 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace LCPDA
+using LCPDA.ViewModels;
+
+namespace LCPDA.Views
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
     public partial class MainWindow : Window
     {
         public MainWindow()
         {
             InitializeComponent();
+
+            // Set the DataContext to the MainViewModel
+            this.DataContext = new MainViewModel();
         }
     }
 }
