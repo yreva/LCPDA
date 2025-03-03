@@ -11,8 +11,6 @@ using System.Windows.Controls;
 using ScottPlot;
 using System.Windows.Shapes;
 using System.Drawing;
-using ScottPlot.Colormaps;
-using SkiaSharp;
 using System.Windows.Media;
 using System.Globalization;
 using System.Windows.Data;
@@ -267,14 +265,14 @@ namespace LCPDA.ViewModels
             plt.XLabel("Retention Time / min");
             plt.YLabel("Intensity");
 
-            var scatter = plt.Add.ScatterLine(x, y);
+            var scatter = plt.AddScatter(x, y);
             scatter.LineWidth = 1.5F;
 
-            var vline = plt.Add.VerticalLine(_chromatogramViewModel.Times[CurrentScanNumber - 1]);
+            var vline = plt.AddVerticalLine(_chromatogramViewModel.Times[CurrentScanNumber - 1]);
             vline.LineWidth = 1;
-            vline.Color = ScottPlot.Color.FromHex("#0f0f0f");
+            vline.Color = System.Drawing.Color.DarkGray;
 
-            plt.Axes.AutoScale();
+            plt.AxisAuto();
 
             ChromatogramPlot.Refresh();
         }
@@ -310,25 +308,23 @@ namespace LCPDA.ViewModels
 
             double[,] flippedData = FlipVertically(SpectrumViewModel.Intensities2D);
 
-            var hm = plt.Add.Heatmap(SpectrumViewModel.Intensities2D);
-
-            hm.Colormap = new Magma().Reversed();
+            var hm = plt.AddHeatmap(flippedData, ScottPlot.Drawing.Colormap.Magma.Reversed());
             hm.Smooth = true;
 
-            var cb = plt.Add.ColorBar(hm);
+            var cb = plt.AddColorbar(hm);
             cb.Label = "Intensity";
             //cb.LabelStyle.FontSize = 12;
-            //hm.Axes.XAxis.Min = _chromatogramViewModel.Times.Min();
-            //hm.Axes.XAxis.Max = _chromatogramViewModel.Times.Max();
-            //hm.Axes.YAxis.Min = _spectrumViewModel.UniqueMasses.Min();
-            //hm.Axes.YAxis.Max = _spectrumViewModel.UniqueMasses.Max();
+            hm.XMin = _chromatogramViewModel.Times.Min();
+            hm.XMax = _chromatogramViewModel.Times.Max();
+            hm.YMin = _spectrumViewModel.UniqueMasses.Min();
+            hm.YMax = _spectrumViewModel.UniqueMasses.Max();
 
 
-            var vline = plt.Add.VerticalLine(_chromatogramViewModel.Times[CurrentScanNumber - 1]);
+            var vline = plt.AddVerticalLine(_chromatogramViewModel.Times[CurrentScanNumber - 1]);
             vline.LineWidth = 1;
-            vline.Color = ScottPlot.Color.FromHex("#0f0f0f");
+            vline.Color = System.Drawing.Color.DarkGray;
 
-            plt.Axes.AutoScale();
+            plt.AxisAuto();
 
             ChromatogramPlot.Refresh();
         }
@@ -346,25 +342,24 @@ namespace LCPDA.ViewModels
 
             double[,] flippedData = FlipVertically(SpectrumViewModel.Log10Intensities2D);
 
-            var hm = plt.Add.Heatmap(flippedData);
+            var hm = plt.AddHeatmap(flippedData);
 
-            hm.Colormap = new Magma().Reversed();
             hm.Smooth = true;
 
-            var cb = plt.Add.ColorBar(hm);
+            var cb = plt.AddColorbar(hm);
             cb.Label = "Log(Intensity)";
             //cb.LabelStyle.FontSize = 12;
-            //hm.Axes.XAxis.Min = _chromatogramViewModel.Times.Min();
-            //hm.Axes.XAxis.Max = _chromatogramViewModel.Times.Max();
-            //hm.Axes.YAxis.Min = _spectrumViewModel.UniqueMasses.Min();
-            //hm.Axes.YAxis.Max = _spectrumViewModel.UniqueMasses.Max();
+            hm.XMin = _chromatogramViewModel.Times.Min();
+            hm.XMax = _chromatogramViewModel.Times.Max();
+            hm.YMin = _spectrumViewModel.UniqueMasses.Min();
+            hm.YMax = _spectrumViewModel.UniqueMasses.Max();
 
 
-            var vline = plt.Add.VerticalLine(_chromatogramViewModel.Times[CurrentScanNumber - 1]);
+            var vline = plt.AddVerticalLine(_chromatogramViewModel.Times[CurrentScanNumber - 1]);
             vline.LineWidth = 1;
-            vline.Color = ScottPlot.Color.FromHex("#0f0f0f");
+            vline.Color = System.Drawing.Color.DarkGray;
 
-            plt.Axes.AutoScale();
+            plt.AxisAuto();
 
             ChromatogramPlot.Refresh();
         }
@@ -390,14 +385,14 @@ namespace LCPDA.ViewModels
         private void ResetVlineOnChomatogram()
         {
             var plt = ChromatogramPlot.Plot;
-            var vline = plt.PlottableList.FirstOrDefault(x => x.ToString().Contains("VerticalLine"));
-            plt.PlottableList.Remove(vline);
+            var vline = plt.GetPlottables().FirstOrDefault(x => x.ToString().Contains("VerticalLine"));
+            plt.Remove(vline);
 
             double lineLoc = (_currentChromatogramStyle == "Line") ? _chromatogramViewModel.Times[CurrentScanNumber - 1] : CurrentScanNumber;
 
-            var line = plt.Add.VerticalLine(lineLoc);
+            var line = plt.AddVerticalLine(lineLoc);
             line.LineWidth = 1;
-            line.Color = ScottPlot.Color.FromHex("#0f0f0f");
+            line.Color = System.Drawing.Color.DarkGray;
             ChromatogramPlot.Refresh();
         }
 
@@ -410,13 +405,13 @@ namespace LCPDA.ViewModels
             var x = _spectrumViewModel.MZ[CurrentScanNumber - 1];
             var y = _spectrumViewModel.Intensity[CurrentScanNumber - 1];
 
-            plt.Add.Bars(x, y);
+            plt.AddSignalXY(x, y);
 
             plt.XLabel("m/z");
             plt.YLabel("Intensity");
 
-            plt.Axes.AutoScale();
-            plt.Axes.AntiAlias(true);
+            plt.AxisAuto();
+            //plt.AntiAlias(true);
 
             SpectrumPlot.Refresh();
         }
@@ -462,9 +457,10 @@ namespace LCPDA.ViewModels
             if (e.LeftButton == MouseButtonState.Pressed)
             {
                 var mouse = e.GetPosition(ChromatogramPlot);
-                var x = mouse.X;
-                var y = mouse.Y;
-                double clickedX = ChromatogramPlot.Plot.GetCoordinates(new Pixel(x, y)).X;
+                float x = (float)mouse.X;
+                float y = (float)mouse.Y;
+                //double clickedX = ChromatogramPlot.Plot.GetCoordinates(new Pixel(x, y)).X;
+                double clickedX = ChromatogramPlot.Plot.GetPixel(x, y).xPixel;
 
                 if (_currentChromatogramStyle == "Line")
                 {
