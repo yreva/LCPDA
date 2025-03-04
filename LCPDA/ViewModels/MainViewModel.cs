@@ -18,6 +18,7 @@ using System.Globalization;
 using System.Windows.Data;
 using System.Reflection;
 using System.IO;
+using RawVision.Models;
 
 namespace LCPDA.ViewModels
 {
@@ -28,21 +29,13 @@ namespace LCPDA.ViewModels
         private void OnPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-
-            switch (propertyName)
-            {
-                case "CurrentScanNumber":
-                    PlotMassSpectrum();
-                    ResetVlineOnChomatogram();
-                    break;
-
-            }
         }
 
         // declare private View Models
         private ChromatogramViewModel _chromatogramViewModel;
         private SpectrumViewModel _spectrumViewModel;
         private IOModel _ioModel;
+        private PlotModel _plotModel;
 
         // expose View Models to public
         public ChromatogramViewModel ChromatogramViewModel
@@ -87,12 +80,17 @@ namespace LCPDA.ViewModels
             ChromatogramViewModel = new ChromatogramViewModel();
             SpectrumViewModel = new SpectrumViewModel();
             _ioModel = new IOModel();
+            _plotModel = new PlotModel(_chromatogramPlot, _spectrumPlot, _chromatogramViewModel, _spectrumViewModel);
+            _plotModel.ScanNumber = CurrentScanNumber;
+            _plotModel.ChromatogramStyle = _currentChromatogramStyle;
+            _plotModel.PropertyChanged += PropertyChanged;
+
 
             // subscribe to events
             ChromatogramPlot.MouseDown += ChromPlot_MouseDown;
         }
 
-        private string _currentChromatogramStyle;
+        private string _currentChromatogramStyle = "Line";
 
         private int _currentScanNumber = 1;
         public int CurrentScanNumber
@@ -193,7 +191,7 @@ namespace LCPDA.ViewModels
             {
                 case "Line":
                     _currentChromatogramStyle = "Line";
-                    PlotChromatogram();
+                    _plotModel.PlotChromatogram();
                     break;
                 case "Map":
                     _currentChromatogramStyle = "Map";
@@ -201,7 +199,7 @@ namespace LCPDA.ViewModels
                     break;
             }
 
-            PlotMassSpectrum();
+            _plotModel.PlotMassSpectrum();
 
             //HandleLoadingPopup("Stop");
         }
@@ -256,169 +254,13 @@ namespace LCPDA.ViewModels
             }
         }
 
-        private void PlotChromatogram()
-        {
-            var plt = ChromatogramPlot.Plot;
-            plt.Clear();
-
-            var x = _chromatogramViewModel.Times;
-            var y = _chromatogramViewModel.TIC;
-
-            plt.XLabel("Retention Time / min");
-            plt.YLabel("Intensity");
-
-            var scatter = plt.Add.ScatterLine(x, y);
-            scatter.LineWidth = 1.5F;
-
-            var vline = plt.Add.VerticalLine(_chromatogramViewModel.Times[CurrentScanNumber - 1]);
-            vline.LineWidth = 1;
-            vline.Color = ScottPlot.Color.FromHex("#0f0f0f");
-
-            plt.Axes.AutoScale();
-
-            ChromatogramPlot.Refresh();
-        }
-
         private void Plot2DChromatogram()
         {
-            if (SpectrumViewModel.Intensities2D == null)
+            if (_spectrumViewModel.Intensities2D == null)
             {
                 return;
             }
-
-            if (MapScalingMethod == "Linear")
-            {
-                PlotLinearMzMap();
-            }
-
-            else if (MapScalingMethod == "Log10")
-            {
-                PlotLog10MzMap();
-            }
-        }
-
-        private void PlotLinearMzMap()
-        {
-            var plt = ChromatogramPlot.Plot;
-            plt.Clear();
-
-            var x = _chromatogramViewModel.Times;
-            var y = _chromatogramViewModel.TIC;
-
-            plt.XLabel("Retention Time / min");
-            plt.YLabel("m/z");
-
-            double[,] flippedData = FlipVertically(SpectrumViewModel.Intensities2D);
-
-            var hm = plt.Add.Heatmap(SpectrumViewModel.Intensities2D);
-
-            hm.Colormap = new Magma().Reversed();
-            hm.Smooth = true;
-
-            var cb = plt.Add.ColorBar(hm);
-            cb.Label = "Intensity";
-            //cb.LabelStyle.FontSize = 12;
-            //hm.Axes.XAxis.Min = _chromatogramViewModel.Times.Min();
-            //hm.Axes.XAxis.Max = _chromatogramViewModel.Times.Max();
-            //hm.Axes.YAxis.Min = _spectrumViewModel.UniqueMasses.Min();
-            //hm.Axes.YAxis.Max = _spectrumViewModel.UniqueMasses.Max();
-
-
-            var vline = plt.Add.VerticalLine(_chromatogramViewModel.Times[CurrentScanNumber - 1]);
-            vline.LineWidth = 1;
-            vline.Color = ScottPlot.Color.FromHex("#0f0f0f");
-
-            plt.Axes.AutoScale();
-
-            ChromatogramPlot.Refresh();
-        }
-
-        private void PlotLog10MzMap()
-        {
-            var plt = ChromatogramPlot.Plot;
-            plt.Clear();
-
-            var x = _chromatogramViewModel.Times;
-            var y = _chromatogramViewModel.TIC;
-
-            plt.XLabel("Retention Time / min");
-            plt.YLabel("m/z");
-
-            double[,] flippedData = FlipVertically(SpectrumViewModel.Log10Intensities2D);
-
-            var hm = plt.Add.Heatmap(flippedData);
-
-            hm.Colormap = new Magma().Reversed();
-            hm.Smooth = true;
-
-            var cb = plt.Add.ColorBar(hm);
-            cb.Label = "Log(Intensity)";
-            //cb.LabelStyle.FontSize = 12;
-            //hm.Axes.XAxis.Min = _chromatogramViewModel.Times.Min();
-            //hm.Axes.XAxis.Max = _chromatogramViewModel.Times.Max();
-            //hm.Axes.YAxis.Min = _spectrumViewModel.UniqueMasses.Min();
-            //hm.Axes.YAxis.Max = _spectrumViewModel.UniqueMasses.Max();
-
-
-            var vline = plt.Add.VerticalLine(_chromatogramViewModel.Times[CurrentScanNumber - 1]);
-            vline.LineWidth = 1;
-            vline.Color = ScottPlot.Color.FromHex("#0f0f0f");
-
-            plt.Axes.AutoScale();
-
-            ChromatogramPlot.Refresh();
-        }
-
-        private double[,] FlipVertically(double[,] array)
-        {
-            int rows = array.GetLength(0);
-            int cols = array.GetLength(1);
-            double[,] newArray = new double[rows, cols];
-
-            for (int i = 0; i < rows / 2; i++)
-            {
-                for (int j = 0; j < cols; j++)
-                {
-                    // Swap element at (i, j) with (rows - i - 1, j)
-                    newArray[rows - i - 1, j] = array[i, j];
-                }
-            }
-
-            return newArray;
-        }
-
-        private void ResetVlineOnChomatogram()
-        {
-            var plt = ChromatogramPlot.Plot;
-            var vline = plt.PlottableList.FirstOrDefault(x => x.ToString().Contains("VerticalLine"));
-            plt.PlottableList.Remove(vline);
-
-            double lineLoc = (_currentChromatogramStyle == "Line") ? _chromatogramViewModel.Times[CurrentScanNumber - 1] : CurrentScanNumber;
-
-            var line = plt.Add.VerticalLine(lineLoc);
-            line.LineWidth = 1;
-            line.Color = ScottPlot.Color.FromHex("#0f0f0f");
-            ChromatogramPlot.Refresh();
-        }
-
-        private void PlotMassSpectrum()
-        {
-            var plt = SpectrumPlot.Plot;
-
-            plt.Clear();
-
-            var x = _spectrumViewModel.MZ[CurrentScanNumber - 1];
-            var y = _spectrumViewModel.Intensity[CurrentScanNumber - 1];
-
-            plt.Add.Bars(x, y);
-
-            plt.XLabel("m/z");
-            plt.YLabel("Intensity");
-
-            plt.Axes.AutoScale();
-            plt.Axes.AntiAlias(true);
-
-            SpectrumPlot.Refresh();
+            _plotModel.Plot2DChromatogram(MapScalingMethod);
         }
 
         private void ChromatogramStyleChanged()
@@ -427,7 +269,7 @@ namespace LCPDA.ViewModels
             {
                 case "Line":
                     _currentChromatogramStyle = "Line";
-                    PlotChromatogram();
+                    _plotModel.PlotChromatogram();
                     break;
                 case "Map":
                     _currentChromatogramStyle = "Map";
