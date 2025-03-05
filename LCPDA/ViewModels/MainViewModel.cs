@@ -18,6 +18,7 @@ using System.Globalization;
 using System.Windows.Data;
 using System.Reflection;
 using System.IO;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace LCPDA.ViewModels
 {
@@ -309,10 +310,11 @@ namespace LCPDA.ViewModels
             plt.YLabel("m/z");
 
             double[,] flippedData = FlipVertically(SpectrumViewModel.Intensities2D);
+           // double[,] filteredData = RemoveLowIntensityRows(flippedData,0.01);
 
-            var hm = plt.Add.Heatmap(SpectrumViewModel.Intensities2D);
+            var hm = plt.Add.Heatmap(flippedData);
 
-            hm.Colormap = new Magma().Reversed();
+            hm.Colormap = new Turbo();
             hm.Smooth = true;
 
             var cb = plt.Add.ColorBar(hm);
@@ -333,6 +335,35 @@ namespace LCPDA.ViewModels
             ChromatogramPlot.Refresh();
         }
 
+        private double[,] RemoveLowIntensityRows(double[,] array, double multiplier)
+        {
+            int rows = array.GetLength(0);
+            int cols = array.GetLength(1);
+
+            // Find the max value in the entire array
+            double globalMax = array.Cast<double>().Max();
+            double threshold = multiplier * globalMax;
+
+            // Identify rows where max(row) >= threshold
+            var validRows = Enumerable.Range(0, rows)
+                .Where(r => Enumerable.Range(0, cols)
+                    .Max(c => array[r, c]) >= threshold)
+                .ToArray();
+
+            // Create new array with only valid rows
+            double[,] result = new double[validRows.Length, cols];
+
+            for (int i = 0; i < validRows.Length; i++)
+            {
+                for (int j = 0; j < cols; j++)
+                {
+                    result[i, j] = array[validRows[i], j];
+                }
+            }
+
+            return result;
+        }
+
         private void PlotLog10MzMap()
         {
             var plt = ChromatogramPlot.Plot;
@@ -348,8 +379,8 @@ namespace LCPDA.ViewModels
 
             var hm = plt.Add.Heatmap(flippedData);
 
-            hm.Colormap = new Magma().Reversed();
-            hm.Smooth = true;
+            hm.Colormap = new Turbo();
+            //hm.Smooth = true;
 
             var cb = plt.Add.ColorBar(hm);
             cb.Label = "Log(Intensity)";
