@@ -1,24 +1,13 @@
 ﻿using System.ComponentModel;
 using System.Windows;
 using System.Windows.Input;
-using System;
 using Microsoft.Win32;
 using MyWpfApp.ViewModels;
 using LCPDA.Models;
-using ThermoFisher.CommonCore.Data.Business;
 using ScottPlot.WPF;
-using System.Windows.Controls;
 using ScottPlot;
-using System.Windows.Shapes;
-using System.Drawing;
 using ScottPlot.Colormaps;
-using SkiaSharp;
-using System.Windows.Media;
-using System.Globalization;
-using System.Windows.Data;
-using System.Reflection;
-using System.IO;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+
 
 namespace LCPDA.ViewModels
 {
