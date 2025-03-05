@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Input;
 using LCPDA.ViewModels;
 using MyWpfApp.ViewModels;
 using ScottPlot;
@@ -23,7 +24,7 @@ namespace RawVision.Models
 
             switch (propertyName)
             {
-                case "CurrentScanNumber":
+                case "ScanNumber":
                     PlotMassSpectrum();
                     ResetVlineOnChomatogram();
                     break;
@@ -42,7 +43,11 @@ namespace RawVision.Models
         public string ChromatogramStyle
         {
             get { return _chromatogramStyle; }
-            set { _chromatogramStyle = value; }
+            set
+            {
+                _chromatogramStyle = value;
+                OnPropertyChanged(nameof(ChromatogramStyle));
+            }
         }
 
         private int _scanNumber;
@@ -52,6 +57,7 @@ namespace RawVision.Models
             set
             {
                 _scanNumber = value;
+                OnPropertyChanged(nameof(ScanNumber));
             }
         }
 
@@ -61,6 +67,8 @@ namespace RawVision.Models
             _spectrumPlot = sp;
             _chromatogramViewModel = cvm;
             _spectrumViewModel = svm;
+
+            _chromatogramPlot.MouseDown += ChromPlot_MouseDown;
         }
 
         public void PlotChromatogram()
@@ -206,6 +214,11 @@ namespace RawVision.Models
 
         public void PlotMassSpectrum()
         {
+            if (_spectrumViewModel.MZ.Count() == 0)
+            {
+                return;
+            }
+
             var plt = _spectrumPlot.Plot;
 
             plt.Clear();
@@ -222,6 +235,40 @@ namespace RawVision.Models
             plt.Axes.AntiAlias(true);
 
             _spectrumPlot.Refresh();
+        }
+
+        public int GetScanNumberFromRetentionTime(double rt)
+        {
+            int x = Array.FindIndex(_chromatogramViewModel.Times, t => t == rt);
+            return x + 1;
+        }
+
+        private void ChromPlot_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (_chromatogramViewModel.Times == null)
+            {
+                return;
+            }
+            if (e.LeftButton == MouseButtonState.Pressed)
+            {
+                var mouse = e.GetPosition(_chromatogramPlot);
+                var x = mouse.X;
+                var y = mouse.Y;
+                double clickedX = _chromatogramPlot.Plot.GetCoordinates(new Pixel(x, y)).X;
+
+                if (ChromatogramStyle == "Line")
+                {
+                    // Find the closest time point
+                    double nearestTime = _chromatogramViewModel.Times.OrderBy(x => Math.Abs(x - clickedX)).FirstOrDefault();
+                    // Update ViewModel
+                    ScanNumber = GetScanNumberFromRetentionTime(nearestTime);
+                }
+                else
+                {
+                    ScanNumber = (int)Math.Abs(clickedX);
+                }
+
+            }
         }
     }
 }

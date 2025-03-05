@@ -130,7 +130,7 @@ namespace LCPDA.ViewModels
         {
             var groupedData = data
                         .GroupBy(d => Math.Round(d.Mass, toDecimal))
-                        .Select(g => (Mass: g.Key, Intensity: g.Average(d => d.Intensity)))
+                        .Select(g => (Mass: g.Key, Intensity: g.Max(d => d.Intensity)))
                         .ToList();
 
             mz.Add(groupedData.Select(item => item.Mass).ToArray());

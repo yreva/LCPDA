@@ -1,23 +1,11 @@
 ﻿using System.ComponentModel;
 using System.Windows;
 using System.Windows.Input;
-using System;
 using Microsoft.Win32;
 using MyWpfApp.ViewModels;
 using LCPDA.Models;
-using ThermoFisher.CommonCore.Data.Business;
 using ScottPlot.WPF;
-using System.Windows.Controls;
 using ScottPlot;
-using System.Windows.Shapes;
-using System.Drawing;
-using ScottPlot.Colormaps;
-using SkiaSharp;
-using System.Windows.Media;
-using System.Globalization;
-using System.Windows.Data;
-using System.Reflection;
-using System.IO;
 using RawVision.Models;
 
 namespace LCPDA.ViewModels
@@ -276,6 +264,35 @@ namespace LCPDA.ViewModels
                     Plot2DChromatogram();
                     break;
             }
+        }
+
+        private double[,] RemoveLowIntensityRows(double[,] array, double multiplier)
+        {
+            int rows = array.GetLength(0);
+            int cols = array.GetLength(1);
+
+            // Find the max value in the entire array
+            double globalMax = array.Cast<double>().Max();
+            double threshold = multiplier * globalMax;
+
+            // Identify rows where max(row) >= threshold
+            var validRows = Enumerable.Range(0, rows)
+                .Where(r => Enumerable.Range(0, cols)
+                    .Max(c => array[r, c]) >= threshold)
+                .ToArray();
+
+            // Create new array with only valid rows
+            double[,] result = new double[validRows.Length, cols];
+
+            for (int i = 0; i < validRows.Length; i++)
+            {
+                for (int j = 0; j < cols; j++)
+                {
+                    result[i, j] = array[validRows[i], j];
+                }
+            }
+
+            return result;
         }
 
         public void ScalingMethodChanged()
