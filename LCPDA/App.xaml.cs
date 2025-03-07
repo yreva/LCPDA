@@ -2,7 +2,7 @@
 using System.Data;
 using System.Windows;
 
-namespace LCPDA
+namespace RawVision
 {
     /// <summary>
     /// Interaction logic for App.xaml

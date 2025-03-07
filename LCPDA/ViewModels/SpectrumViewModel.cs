@@ -5,7 +5,7 @@ using ThermoFisher.CommonCore.Data.Business;
 using ThermoFisher.CommonCore.Data.Interfaces;
 using System.Collections.Concurrent;
 
-namespace LCPDA.ViewModels
+namespace RawVision.ViewModels
 {
     public class SpectrumViewModel : INotifyPropertyChanged
     {

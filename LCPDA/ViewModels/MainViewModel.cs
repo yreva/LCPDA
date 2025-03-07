@@ -2,13 +2,15 @@
 using System.Windows;
 using System.Windows.Input;
 using Microsoft.Win32;
-using MyWpfApp.ViewModels;
-using LCPDA.Models;
+
 using ScottPlot.WPF;
 using ScottPlot;
 using RawVision.Models;
+using RawVision.Models;
+using RawVision.Views;
 
-namespace LCPDA.ViewModels
+
+namespace RawVision.ViewModels
 {
     public class MainViewModel : INotifyPropertyChanged
     {
@@ -69,13 +71,13 @@ namespace LCPDA.ViewModels
             SpectrumViewModel = new SpectrumViewModel();
             _ioModel = new IOModel();
             _plotModel = new PlotModel(_chromatogramPlot, _spectrumPlot, _chromatogramViewModel, _spectrumViewModel);
-            _plotModel.ScanNumber = CurrentScanNumber;
             _plotModel.ChromatogramStyle = _currentChromatogramStyle;
             _plotModel.PropertyChanged += PropertyChanged;
 
 
             // subscribe to events
             ChromatogramPlot.MouseDown += ChromPlot_MouseDown;
+            ChromatogramPlot.MouseDoubleClick += ChromPlot_MouseDoubleClick;
         }
 
         private string _currentChromatogramStyle = "Line";
@@ -116,6 +118,7 @@ namespace LCPDA.ViewModels
                 return;
             }
             CurrentScanNumber += increment;
+            PlotSettings.Instance.ScanNumber += increment;
             return;
         }
 
@@ -331,13 +334,26 @@ namespace LCPDA.ViewModels
                     double nearestTime = ChromatogramViewModel.Times.OrderBy(x => Math.Abs(x - clickedX)).FirstOrDefault();
                     // Update ViewModel
                     CurrentScanNumber = GetScanNumberFromRetentionTime(nearestTime);
+                    PlotSettings.Instance.ScanNumber = GetScanNumberFromRetentionTime(nearestTime);
                 }
                 else
                 {
                     CurrentScanNumber = (int)Math.Abs(clickedX);
+                    PlotSettings.Instance.ScanNumber = (int)Math.Abs(clickedX);
                 }
                 
             }
+        }
+
+        private void ChromPlot_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            ChromatogramPlotOptionsDialogue dialog = new ChromatogramPlotOptionsDialogue();
+            if (dialog.ShowDialog() == true)
+            {
+                //
+            }
+
+            e.Handled = true;
         }
 
         private string _selectedOption = "Line";
@@ -350,6 +366,22 @@ namespace LCPDA.ViewModels
                 OnPropertyChanged(nameof(SelectedOption));
                 ChromatogramStyleChanged();
             }
+        }
+
+        public string GetColormapSetting()
+        {
+            return _plotModel.Colormap.Name;
+        }
+
+        public void SetColormapSetting(string name)
+        {
+            bool reversed = false;
+            if (name.Contains("Reversed"))
+            {
+                reversed = true;
+                name = name.Replace("Reversed","");
+            }
+            _plotModel.SetColormapByName(name,reversed);
         }
 
         public ICommand SaveDataCommand { get; }

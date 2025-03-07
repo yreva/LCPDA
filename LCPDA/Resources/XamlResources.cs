@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using System.Windows.Data;
 using System.Windows.Input;
 
-namespace LCPDA
+namespace RawVision
 {
     public class EnumToBooleanConverter : IValueConverter
     {

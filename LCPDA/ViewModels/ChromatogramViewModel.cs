@@ -5,7 +5,7 @@ using System.Windows;
 using ThermoFisher.CommonCore.Data.Business;
 using ThermoFisher.CommonCore.Data.Interfaces;
 
-namespace MyWpfApp.ViewModels
+namespace RawVision.ViewModels
 {
     public class ChromatogramViewModel : INotifyPropertyChanged
     {

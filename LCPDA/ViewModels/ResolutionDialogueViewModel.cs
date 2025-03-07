@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
-namespace LCPDA.ViewModels
+namespace RawVision.ViewModels
 {
     internal class ResolutionDialogueViewModel
     {

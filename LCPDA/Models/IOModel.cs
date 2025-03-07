@@ -9,7 +9,7 @@ using ThermoFisher.CommonCore.MassPrecisionEstimator;
 using ThermoFisher.CommonCore.RawFileReader;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
-namespace LCPDA.Models
+namespace RawVision.Models
 {
     public class IOModel
     {

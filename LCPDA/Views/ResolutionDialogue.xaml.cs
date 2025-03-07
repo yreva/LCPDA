@@ -12,9 +12,9 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 
-using LCPDA.ViewModels;
+using RawVision.ViewModels;
 
-namespace LCPDA
+namespace RawVision.Views
 {
     /// <summary>
     /// Interaction logic for Window1.xaml

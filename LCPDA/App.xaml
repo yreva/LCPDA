@@ -1,9 +1,11 @@
-﻿<Application x:Class="LCPDA.App"
+﻿<Application x:Class="RawVision.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:LCPDA"
+             xmlns:local="clr-namespace:RawVision"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-         
+        <Style x:Key="WinAll" TargetType="{x:Type Window}">
+            <Setter Property="FontFamily" Value="Consolas"/>
+        </Style>
     </Application.Resources>
 </Application>

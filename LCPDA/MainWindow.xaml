@@ -1,14 +1,15 @@
-﻿<Window x:Class="LCPDA.Views.MainWindow"
+﻿<Window x:Class="RawVision.Views.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:LCPDA"
+        xmlns:local="clr-namespace:RawVision"
         xmlns:sp="clr-namespace:ScottPlot.WPF;assembly=ScottPlot.WPF"
         mc:Ignorable="d"
         Title="RawVision - MS Edition" Height="680" Width="950"
         KeyboardNavigation.DirectionalNavigation="None"
-        Background="Gainsboro">
+        Background="Gainsboro"
+        Style="{StaticResource WinAll}">
 
     <Window.Resources>
         <local:EnumToBooleanConverter x:Key="EnumToBooleanConverter"/>
@@ -26,6 +27,7 @@
             <MenuItem Header="_Settings">
                 <MenuItem Header="Mass Resolution" Click="ChangeMassResolution"/>
                 <MenuItem Header="Map Scaling" Click="ChangeMapScaling"/>
+                <MenuItem Header="Colormap" Click="ChangeColormap"/>
             </MenuItem>
             <MenuItem Header="_Help">
                 <MenuItem Header="About" Click="About_Click"/>

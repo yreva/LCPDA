@@ -1,13 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Drawing.Imaging;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Input;
-using LCPDA.ViewModels;
-using MyWpfApp.ViewModels;
+using System.Xml.Linq;
+using RawVision.ViewModels;
 using ScottPlot;
+using ScottPlot.Panels;
 using ScottPlot.WPF;
 
 namespace RawVision.Models
@@ -21,23 +25,30 @@ namespace RawVision.Models
         private void OnPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-
-            switch (propertyName)
-            {
-                case "ScanNumber":
-                    PlotMassSpectrum();
-                    ResetVlineOnChomatogram();
-                    break;
-
-            }
         }
 
         // vars for plots from UI
         private WpfPlot _chromatogramPlot;
         private WpfPlot _spectrumPlot;
 
+        private ScottPlot.Panels.ColorBar _colorbar;
+
         private ChromatogramViewModel _chromatogramViewModel;
         private SpectrumViewModel _spectrumViewModel;
+
+        public PlotModel(WpfPlot cp, WpfPlot sp, ChromatogramViewModel cvm, SpectrumViewModel svm)
+        {
+            _chromatogramPlot = cp;
+            _spectrumPlot = sp;
+            _chromatogramViewModel = cvm;
+            _spectrumViewModel = svm;
+
+            PlotSettings.Instance.PropertyChanged += PlotSettings_PropertyChanged;
+
+            SetColormapByName("Ice", false);
+
+            //_chromatogramPlot.MouseDown += ChromPlot_MouseDown;
+        }
 
         private string _chromatogramStyle;
         public string ChromatogramStyle
@@ -50,25 +61,15 @@ namespace RawVision.Models
             }
         }
 
-        private int _scanNumber;
-        public int ScanNumber
+        private IColormap _colormap;
+
+        public IColormap Colormap
         {
-            get { return _scanNumber; }
+            get { return _colormap; }
             set
             {
-                _scanNumber = value;
-                OnPropertyChanged(nameof(ScanNumber));
+                _colormap = value;
             }
-        }
-
-        public PlotModel(WpfPlot cp, WpfPlot sp, ChromatogramViewModel cvm, SpectrumViewModel svm)
-        {
-            _chromatogramPlot = cp;
-            _spectrumPlot = sp;
-            _chromatogramViewModel = cvm;
-            _spectrumViewModel = svm;
-
-            _chromatogramPlot.MouseDown += ChromPlot_MouseDown;
         }
 
         public void PlotChromatogram()
@@ -85,11 +86,16 @@ namespace RawVision.Models
             var scatter = plt.Add.ScatterLine(x, y);
             scatter.LineWidth = 1.5F;
 
-            var vline = plt.Add.VerticalLine(_chromatogramViewModel.Times[ScanNumber - 1]);
+            var vline = plt.Add.VerticalLine(_chromatogramViewModel.Times[PlotSettings.Instance.ScanNumber - 1]);
             vline.LineWidth = 1;
             vline.Color = ScottPlot.Color.FromHex("#0f0f0f");
 
             plt.Axes.AutoScale();
+
+            if (_colorbar != null)
+            {
+                _colorbar.IsVisible = false;
+            }
 
             _chromatogramPlot.Refresh();
         }
@@ -123,19 +129,22 @@ namespace RawVision.Models
 
             var hm = plt.Add.Heatmap(_spectrumViewModel.Intensities2D);
 
-            hm.Colormap = new ScottPlot.Colormaps.Magma().Reversed();
+            hm.Colormap = Colormap;
             hm.Smooth = true;
 
-            var cb = plt.Add.ColorBar(hm);
-            cb.Label = "Intensity";
-            //cb.LabelStyle.FontSize = 12;
-            //hm.Axes.XAxis.Min = _chromatogramViewModel.Times.Min();
-            //hm.Axes.XAxis.Max = _chromatogramViewModel.Times.Max();
-            //hm.Axes.YAxis.Min = _spectrumViewModel.UniqueMasses.Min();
-            //hm.Axes.YAxis.Max = _spectrumViewModel.UniqueMasses.Max();
+            if (_colorbar == null)
+            {
+                _colorbar = plt.Add.ColorBar(hm);
+            }
+            else
+            {
+                _colorbar.Source = hm;
+            }
 
+            _colorbar.IsVisible = true;
+            _colorbar.Label = "Intensity";
 
-            var vline = plt.Add.VerticalLine(_chromatogramViewModel.Times[ScanNumber - 1]);
+            var vline = plt.Add.VerticalLine(_chromatogramViewModel.Times[PlotSettings.Instance.ScanNumber - 1]);
             vline.LineWidth = 1;
             vline.Color = ScottPlot.Color.FromHex("#0f0f0f");
 
@@ -159,19 +168,22 @@ namespace RawVision.Models
 
             var hm = plt.Add.Heatmap(flippedData);
 
-            hm.Colormap = new ScottPlot.Colormaps.Magma().Reversed();
+            hm.Colormap = Colormap;
             hm.Smooth = true;
 
-            var cb = plt.Add.ColorBar(hm);
-            cb.Label = "Log(Intensity)";
-            //cb.LabelStyle.FontSize = 12;
-            //hm.Axes.XAxis.Min = _chromatogramViewModel.Times.Min();
-            //hm.Axes.XAxis.Max = _chromatogramViewModel.Times.Max();
-            //hm.Axes.YAxis.Min = _spectrumViewModel.UniqueMasses.Min();
-            //hm.Axes.YAxis.Max = _spectrumViewModel.UniqueMasses.Max();
+            if (_colorbar == null)
+            {
+                _colorbar = plt.Add.ColorBar(hm);
+            }
+            else
+            {
+                _colorbar.Source = hm;
+            }
 
+            _colorbar.IsVisible = true;
+            _colorbar.Label = "Log(Intensity)";
 
-            var vline = plt.Add.VerticalLine(_chromatogramViewModel.Times[ScanNumber - 1]);
+            var vline = plt.Add.VerticalLine(_chromatogramViewModel.Times[PlotSettings.Instance.ScanNumber - 1]);
             vline.LineWidth = 1;
             vline.Color = ScottPlot.Color.FromHex("#0f0f0f");
 
@@ -204,7 +216,7 @@ namespace RawVision.Models
             var vline = plt.PlottableList.FirstOrDefault(x => x.ToString().Contains("VerticalLine"));
             plt.PlottableList.Remove(vline);
 
-            double lineLoc = (_chromatogramStyle == "Line") ? _chromatogramViewModel.Times[ScanNumber - 1] : ScanNumber;
+            double lineLoc = (_chromatogramStyle == "Line") ? _chromatogramViewModel.Times[PlotSettings.Instance.ScanNumber - 1] : PlotSettings.Instance.ScanNumber;
 
             var line = plt.Add.VerticalLine(lineLoc);
             line.LineWidth = 1;
@@ -223,8 +235,8 @@ namespace RawVision.Models
 
             plt.Clear();
 
-            var x = _spectrumViewModel.MZ[ScanNumber - 1];
-            var y = _spectrumViewModel.Intensity[ScanNumber - 1];
+            var x = _spectrumViewModel.MZ[PlotSettings.Instance.ScanNumber - 1];
+            var y = _spectrumViewModel.Intensity[PlotSettings.Instance.ScanNumber - 1];
 
             plt.Add.Bars(x, y);
 
@@ -243,31 +255,90 @@ namespace RawVision.Models
             return x + 1;
         }
 
-        private void ChromPlot_MouseDown(object sender, MouseButtonEventArgs e)
+        //private void ChromPlot_MouseDown(object sender, MouseButtonEventArgs e)
+        //{
+        //    if (_chromatogramViewModel.Times == null)
+        //    {
+        //        return;
+        //    }
+        //    if (e.LeftButton == MouseButtonState.Pressed)
+        //    {
+        //        var mouse = e.GetPosition(_chromatogramPlot);
+        //        var x = mouse.X;
+        //        var y = mouse.Y;
+        //        double clickedX = _chromatogramPlot.Plot.GetCoordinates(new Pixel(x, y)).X;
+
+        //        if (ChromatogramStyle == "Line")
+        //        {
+        //            // Find the closest time point
+        //            double nearestTime = _chromatogramViewModel.Times.OrderBy(x => Math.Abs(x - clickedX)).FirstOrDefault();
+        //            // Update ViewModel
+        //            ScanNumber = GetScanNumberFromRetentionTime(nearestTime);
+        //        }
+        //        else
+        //        {
+        //            ScanNumber = (int)Math.Abs(clickedX);
+        //        }
+        //    }
+        //}
+
+        private void PlotSettings_PropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
-            if (_chromatogramViewModel.Times == null)
+            switch (e.PropertyName)
             {
-                return;
+                case "ScanNumber":
+                    PlotMassSpectrum();
+                    ResetVlineOnChomatogram();
+                    break;
+
             }
-            if (e.LeftButton == MouseButtonState.Pressed)
+        }
+
+        public void SetColormapByName(string colormapName, bool reverse)
+        {
+            IColormap cm = null;
+            // have to do switch because ScottPlot; could switch to more dynamic colormap library in future
+            switch (colormapName)
             {
-                var mouse = e.GetPosition(_chromatogramPlot);
-                var x = mouse.X;
-                var y = mouse.Y;
-                double clickedX = _chromatogramPlot.Plot.GetCoordinates(new Pixel(x, y)).X;
+                case "Algae":
+                    cm = new ScottPlot.Colormaps.Algae();
+                    break;
+                case "Blues":
+                    cm = new ScottPlot.Colormaps.Blues();
+                    break;
+                case "Deep":
+                    cm = new ScottPlot.Colormaps.Deep();
+                    break;
+                case "Dense":
+                    cm = new ScottPlot.Colormaps.Dense();
+                    break;
+                case "Ice":
+                    cm = new ScottPlot.Colormaps.Ice();
+                    break;
+                case "Grayscale":
+                    cm = new ScottPlot.Colormaps.Grayscale();
+                    break;
+                case "Plasma":
+                    cm = new ScottPlot.Colormaps.Plasma();
+                    break;
+                case "Solar":
+                    cm = new ScottPlot.Colormaps.Solar();
+                    break;
+                case "Thermal":
+                    cm = new ScottPlot.Colormaps.Thermal();
+                    break;
+                case "Turbo":
+                    cm = new ScottPlot.Colormaps.Turbo();
+                    break;
+            }
 
-                if (ChromatogramStyle == "Line")
-                {
-                    // Find the closest time point
-                    double nearestTime = _chromatogramViewModel.Times.OrderBy(x => Math.Abs(x - clickedX)).FirstOrDefault();
-                    // Update ViewModel
-                    ScanNumber = GetScanNumberFromRetentionTime(nearestTime);
-                }
-                else
-                {
-                    ScanNumber = (int)Math.Abs(clickedX);
-                }
-
+            if (reverse)
+            {
+                Colormap = cm.Reversed();
+            }
+            else
+            {
+                Colormap = cm;
             }
         }
     }

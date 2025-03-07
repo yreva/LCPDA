@@ -13,7 +13,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 
-namespace LCPDA
+namespace RawVision
 {
     /// <summary>
     /// Interaction logic for Window1.xaml

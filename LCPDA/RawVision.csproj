@@ -9,8 +9,37 @@
     <ApplicationIcon>rawvision_icon.ico</ApplicationIcon>
   </PropertyGroup>
 
+<ItemGroup>
+    <Content Include="\Resources\Images\*.png">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+</ItemGroup>
+
+<ItemGroup>
+  <None Remove="Resources\Images\colormap_grayscale.png" />
+  <None Remove="Resources\Images\colormap_ice.png" />
+  <None Remove="Resources\Images\colormap_inferno.png" />
+  <None Remove="Resources\Images\colormap_plasma.png" />
+  <None Remove="Resources\Images\colormap_solar.png" />
+  <None Remove="Resources\Images\colormap_thermal.png" />
+  <None Remove="Resources\Images\colormap_turbo.png" />
+  <None Remove="Resources\Images\colormap_viridis.png" />
+</ItemGroup>
+
   <ItemGroup>
     <Content Include="rawvision_icon.ico" />
+    <Resource Include="Resources\Images\colormap_algae.png" />
+    <Resource Include="Resources\Images\colormap_blues.png" />
+    <Resource Include="Resources\Images\colormap_deep.png" />
+    <Resource Include="Resources\Images\colormap_dense.png" />
+    <Resource Include="Resources\Images\colormap_grayscale.png" />
+    <Resource Include="Resources\Images\colormap_ice.png" />
+    <Resource Include="Resources\Images\colormap_inferno.png" />
+    <Resource Include="Resources\Images\colormap_plasma.png" />
+    <Resource Include="Resources\Images\colormap_solar.png" />
+    <Resource Include="Resources\Images\colormap_thermal.png" />
+    <Resource Include="Resources\Images\colormap_turbo.png" />
+    <Resource Include="Resources\Images\colormap_viridis.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -34,7 +63,7 @@
     <PackageReference Include="ScottPlot.WPF" Version="5.0.54" />
   </ItemGroup>
 
-	<Target Name="MoveDependencies" AfterTargets="Build">
+<Target Name="MoveDependencies" AfterTargets="Build">
 		<ItemGroup>
 			<!-- Select all files in the output directory except the EXE -->
 			<DependenciesToMove Include="bin\$(Configuration)\*.*" Exclude="bin\$(Configuration)\$(AssemblyName).exe" />

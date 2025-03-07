@@ -11,17 +11,16 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
-using RawVision.ViewModels;
 
 namespace RawVision.Views
 {
     /// <summary>
-    /// Interaction logic for ScalingDialogue.xaml
+    /// Interaction logic for ColormapSettingsDialogue.xaml
     /// </summary>
-    public partial class ScalingDialogue : Window
+    public partial class ColormapSettingsDialogue : Window
     {
-        public string SelectedScalingMethod;
-        public ScalingDialogue(string previousValue)
+        public string SelectColormapName;
+        public ColormapSettingsDialogue(string previousValue)
         {
             InitializeComponent();
             DisableCurrentSettingButton(previousValue);
@@ -31,18 +30,17 @@ namespace RawVision.Views
         {
             switch (setting)
             {
-                case "Linear":
-                    Linear.IsEnabled = false;
+                case "Thermal":
+                    Thermal.IsEnabled = false;
                     break;
-                case "Log10":
-                    Log10.IsEnabled = false;
+                default:
                     break;
             }
         }
 
         private void ButtonClicked(object sender, RoutedEventArgs e)
         {
-            this.SelectedScalingMethod = (sender as Button).Name;
+            this.SelectColormapName = (sender as Button).Name;
             this.DialogResult = true; // Close the dialog with a "true" result
             this.Close(); // Ensure the dialog closes
         }

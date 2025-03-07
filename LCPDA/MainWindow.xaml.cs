@@ -1,16 +1,17 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using LCPDA.ViewModels;
+using RawVision.ViewModels;
 using ThermoFisher.CommonCore.Data.Business;
 
-namespace LCPDA.Views
+namespace RawVision.Views
 {
     public partial class MainWindow : Window
     {
         public MainWindow()
         {
             InitializeComponent();
+            Style = (Style)FindResource(typeof(Window));
             // Set the DataContext to the MainViewModel
             var viewModel = new MainViewModel();
             this.DataContext = viewModel;
@@ -97,6 +98,17 @@ namespace LCPDA.Views
             if (dialog.ShowDialog() == true)
             {
                 DC.MapScalingMethod = dialog.SelectedScalingMethod;
+                DC.ScalingMethodChanged();
+            }
+        }
+
+        public void ChangeColormap(object sender, RoutedEventArgs e)
+        {
+            var DC = DataContext as MainViewModel;
+            ColormapSettingsDialogue dialog = new ColormapSettingsDialogue(DC.GetColormapSetting());
+            if (dialog.ShowDialog() == true)
+            {
+                DC.SetColormapSetting(dialog.SelectColormapName);
                 DC.ScalingMethodChanged();
             }
         }
