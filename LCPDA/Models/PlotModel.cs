@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Drawing;
 using System.Drawing.Imaging;
 using System.Linq;
 using System.Reflection;
@@ -13,7 +14,8 @@ using Microsoft.VisualBasic;
 using RawVision.ViewModels;
 using RawVision.Views;
 using ScottPlot;
-using ScottPlot.Panels;
+using ScottPlot.Drawing;
+using ScottPlot;
 using ScottPlot.WPF;
 
 namespace RawVision.Models
@@ -33,7 +35,7 @@ namespace RawVision.Models
         private WpfPlot _chromatogramPlot;
         private WpfPlot _spectrumPlot;
 
-        private ScottPlot.Panels.ColorBar _colorbar;
+        private ScottPlot.Plottable.Colorbar _colorbar;
 
         private ChromatogramViewModel _chromatogramViewModel;
         private SpectrumViewModel _spectrumViewModel;
@@ -67,9 +69,8 @@ namespace RawVision.Models
             }
         }
 
-        private IColormap _colormap;
-
-        public IColormap Colormap
+        private ScottPlot.Drawing.IColormap _colormap;
+        public ScottPlot.Drawing.IColormap Colormap
         {
             get { return _colormap; }
             set
@@ -89,14 +90,14 @@ namespace RawVision.Models
             plt.XLabel("Retention Time / min");
             plt.YLabel("Intensity");
 
-            var scatter = plt.Add.ScatterLine(x, y);
+            var scatter = plt.AddScatter(x, y);
             scatter.LineWidth = 1.5F;
 
-            var vline = plt.Add.VerticalLine(_chromatogramViewModel.Times[PlotSettings.Instance.ScanNumber - 1]);
+            var vline = plt.AddVerticalLine(_chromatogramViewModel.Times[PlotSettings.Instance.ScanNumber - 1]);
             vline.LineWidth = 1;
-            vline.Color = ScottPlot.Color.FromHex("#0f0f0f");
+            vline.Color = System.Drawing.Color.FromArgb(230,15,15,15);
 
-            plt.Axes.AutoScale();
+            plt.AxisAuto();
 
             if (_colorbar != null)
             {
@@ -133,14 +134,13 @@ namespace RawVision.Models
 
             double[,] flippedData = FlipVertically(_spectrumViewModel.Intensities2D);
 
-            var hm = plt.Add.Heatmap(_spectrumViewModel.Intensities2D);
+            var hm = plt.AddHeatmap(_spectrumViewModel.Intensities2D, Colormap as ScottPlot.Drawing.Colormap);
 
-            hm.Colormap = Colormap;
             hm.Smooth = true;
 
             if (_colorbar == null)
             {
-                _colorbar = plt.Add.ColorBar(hm);
+                _colorbar = plt.AddColorbar(hm);
             }
             else
             {
@@ -150,11 +150,11 @@ namespace RawVision.Models
             _colorbar.IsVisible = true;
             _colorbar.Label = "Intensity";
 
-            var vline = plt.Add.VerticalLine(_chromatogramViewModel.Times[PlotSettings.Instance.ScanNumber - 1]);
+            var vline = plt.AddVerticalLine(_chromatogramViewModel.Times[PlotSettings.Instance.ScanNumber - 1]);
             vline.LineWidth = 1;
-            vline.Color = ScottPlot.Color.FromHex("#0f0f0f");
+            vline.Color = System.Drawing.Color.FromArgb(230, 15, 15, 15); ;
 
-            plt.Axes.AutoScale();
+            plt.AxisAuto();
 
             _chromatogramPlot.Refresh();
         }
@@ -172,14 +172,13 @@ namespace RawVision.Models
 
             double[,] flippedData = FlipVertically(_spectrumViewModel.Log10Intensities2D);
 
-            var hm = plt.Add.Heatmap(flippedData);
+            var hm = plt.AddHeatmap(flippedData, ScottPlot.Drawing.Colormap.GetColormapByName(Colormap.Name));
 
-            hm.Colormap = Colormap;
             hm.Smooth = true;
 
             if (_colorbar == null)
             {
-                _colorbar = plt.Add.ColorBar(hm);
+                _colorbar = plt.AddColorbar(hm);
             }
             else
             {
@@ -189,11 +188,11 @@ namespace RawVision.Models
             _colorbar.IsVisible = true;
             _colorbar.Label = "Log(Intensity)";
 
-            var vline = plt.Add.VerticalLine(_chromatogramViewModel.Times[PlotSettings.Instance.ScanNumber - 1]);
+            var vline = plt.AddVerticalLine(_chromatogramViewModel.Times[PlotSettings.Instance.ScanNumber - 1]);
             vline.LineWidth = 1;
-            vline.Color = ScottPlot.Color.FromHex("#0f0f0f");
+            vline.Color = System.Drawing.Color.FromArgb(230, 15, 15, 15);
 
-            plt.Axes.AutoScale();
+            plt.AxisAuto();
 
             _chromatogramPlot.Refresh();
         }
@@ -219,14 +218,14 @@ namespace RawVision.Models
         private void ResetVlineOnChomatogram()
         {
             var plt = _chromatogramPlot.Plot;
-            var vline = plt.PlottableList.FirstOrDefault(x => x.ToString().Contains("VerticalLine"));
-            plt.PlottableList.Remove(vline);
+            var vline = plt.GetPlottables().FirstOrDefault(x => x.ToString().Contains("VerticalLine"));
+            plt.Remove(vline);
 
             double lineLoc = (_chromatogramStyle == "Line") ? _chromatogramViewModel.Times[PlotSettings.Instance.ScanNumber - 1] : PlotSettings.Instance.ScanNumber;
 
-            var line = plt.Add.VerticalLine(lineLoc);
+            var line = plt.AddVerticalLine(lineLoc);
             line.LineWidth = 1;
-            line.Color = ScottPlot.Color.FromHex("#0f0f0f");
+            line.Color = System.Drawing.Color.FromArgb(230, 15, 15, 15);
             _chromatogramPlot.Refresh();
         }
 
@@ -244,13 +243,12 @@ namespace RawVision.Models
             var x = _spectrumViewModel.MZ[PlotSettings.Instance.ScanNumber - 1];
             var y = _spectrumViewModel.Intensity[PlotSettings.Instance.ScanNumber - 1];
 
-            plt.Add.Bars(x, y);
+            plt.AddBar(x, y);
 
             plt.XLabel("m/z");
             plt.YLabel("Intensity");
 
-            plt.Axes.AutoScale();
-            plt.Axes.AntiAlias(true);
+            plt.AxisAuto();
 
             _spectrumPlot.Refresh();
         }
@@ -332,7 +330,7 @@ namespace RawVision.Models
                 var mouse = e.GetPosition(_chromatogramPlot);
                 var x = mouse.X;
                 var y = mouse.Y;
-                double clickedX = _chromatogramPlot.Plot.GetCoordinates(new Pixel(x, y)).X;
+                double clickedX = _chromatogramPlot.Plot.Coordinates(new Pixel(x, y)).X;
 
                 if (_chromatogramStyle == "Line")
                 {
@@ -351,39 +349,39 @@ namespace RawVision.Models
 
         public void SetColormapByName(string colormapName, bool reverse)
         {
-            IColormap cm = null;
+            ScottPlot.Drawing.IColormap cm = null;
             // have to do switch because ScottPlot; could switch to more dynamic colormap library in future
             switch (colormapName)
             {
                 case "Algae":
-                    cm = new ScottPlot.Colormaps.Algae();
+                    cm = new ScottPlot.Drawing.Colormaps.Algae();
                     break;
                 case "Blues":
-                    cm = new ScottPlot.Colormaps.Blues();
+                    cm = new ScottPlot.Drawing.Colormaps.Blues();
                     break;
                 case "Deep":
-                    cm = new ScottPlot.Colormaps.Deep();
+                    cm = new ScottPlot.Drawing.Colormaps.Deep();
                     break;
                 case "Dense":
-                    cm = new ScottPlot.Colormaps.Dense();
+                    cm = new ScottPlot.Drawing.Colormaps.Dense();
                     break;
                 case "Ice":
-                    cm = new ScottPlot.Colormaps.Ice();
+                    cm = new ScottPlot.Drawing.Colormaps.Ice();
                     break;
                 case "Grayscale":
-                    cm = new ScottPlot.Colormaps.Grayscale();
+                    cm = new ScottPlot.Drawing.Colormaps.Grayscale();
                     break;
                 case "Plasma":
-                    cm = new ScottPlot.Colormaps.Plasma();
+                    cm = new ScottPlot.Drawing.Colormaps.Plasma();
                     break;
                 case "Solar":
-                    cm = new ScottPlot.Colormaps.Solar();
+                    cm = new ScottPlot.Drawing.Colormaps.Solar();
                     break;
                 case "Thermal":
-                    cm = new ScottPlot.Colormaps.Thermal();
+                    cm = new ScottPlot.Drawing.Colormaps.Thermal();
                     break;
                 case "Turbo":
-                    cm = new ScottPlot.Colormaps.Turbo();
+                    cm = new ScottPlot.Drawing.Colormaps.Turbo();
                     break;
             }
 
