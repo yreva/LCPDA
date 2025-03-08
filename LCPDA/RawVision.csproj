@@ -24,6 +24,8 @@
   <None Remove="Resources\Images\colormap_thermal.png" />
   <None Remove="Resources\Images\colormap_turbo.png" />
   <None Remove="Resources\Images\colormap_viridis.png" />
+  <None Remove="Resources\Images\daltonian_wide_small.png" />
+  <None Remove="Resources\Images\rawvision.png" />
 </ItemGroup>
 
   <ItemGroup>
@@ -40,6 +42,8 @@
     <Resource Include="Resources\Images\colormap_thermal.png" />
     <Resource Include="Resources\Images\colormap_turbo.png" />
     <Resource Include="Resources\Images\colormap_viridis.png" />
+    <Resource Include="Resources\Images\daltonian_wide_small.png" />
+    <Resource Include="Resources\Images\rawvision.png" />
   </ItemGroup>
 
   <ItemGroup>

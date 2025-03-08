@@ -17,9 +17,9 @@ namespace RawVision.Views
     /// <summary>
     /// Interaction logic for ChromatogramPlotOptionsDialogue.xaml
     /// </summary>
-    public partial class ChromatogramPlotOptionsDialogue : Window
+    public partial class ChromatogramOptionsView : Window
     {
-        public ChromatogramPlotOptionsDialogue()
+        public ChromatogramOptionsView()
         {
             InitializeComponent();
         }

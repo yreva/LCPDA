@@ -1,6 +1,6 @@
 ﻿using System;
 using System.IO;
-
+using System.Windows;
 using ThermoFisher.CommonCore.Data;
 using ThermoFisher.CommonCore.Data.Business;
 using ThermoFisher.CommonCore.Data.FilterEnums;
@@ -151,6 +151,11 @@ namespace RawVision.Models
 
         public void WriteDataToCsv(List<double> masses, double[] times, double[,] intensity)
         {
+            if (masses == null)
+            {
+                MessageBox.Show("No data appears to be loaded.", "Save Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
             var a = _filePath;
 
             var m = a.ToUpper().Replace(".RAW","_Masses.csv");

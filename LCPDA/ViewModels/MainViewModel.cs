@@ -73,11 +73,6 @@ namespace RawVision.ViewModels
             _plotModel = new PlotModel(_chromatogramPlot, _spectrumPlot, _chromatogramViewModel, _spectrumViewModel);
             _plotModel.ChromatogramStyle = _currentChromatogramStyle;
             _plotModel.PropertyChanged += PropertyChanged;
-
-
-            // subscribe to events
-            ChromatogramPlot.MouseDown += ChromPlot_MouseDown;
-            ChromatogramPlot.MouseDoubleClick += ChromPlot_MouseDoubleClick;
         }
 
         private string _currentChromatogramStyle = "Line";
@@ -315,46 +310,6 @@ namespace RawVision.ViewModels
             return x + 1;
         }
 
-        private void ChromPlot_MouseDown(object sender, MouseButtonEventArgs e)
-        {
-            if (ChromatogramViewModel.Times == null)
-            {
-                return;
-            }
-            if (e.LeftButton == MouseButtonState.Pressed)
-            {
-                var mouse = e.GetPosition(ChromatogramPlot);
-                var x = mouse.X;
-                var y = mouse.Y;
-                double clickedX = ChromatogramPlot.Plot.GetCoordinates(new Pixel(x, y)).X;
-
-                if (_currentChromatogramStyle == "Line")
-                {
-                    // Find the closest time point
-                    double nearestTime = ChromatogramViewModel.Times.OrderBy(x => Math.Abs(x - clickedX)).FirstOrDefault();
-                    // Update ViewModel
-                    CurrentScanNumber = GetScanNumberFromRetentionTime(nearestTime);
-                    PlotSettings.Instance.ScanNumber = GetScanNumberFromRetentionTime(nearestTime);
-                }
-                else
-                {
-                    CurrentScanNumber = (int)Math.Abs(clickedX);
-                    PlotSettings.Instance.ScanNumber = (int)Math.Abs(clickedX);
-                }
-                
-            }
-        }
-
-        private void ChromPlot_MouseDoubleClick(object sender, MouseButtonEventArgs e)
-        {
-            ChromatogramPlotOptionsDialogue dialog = new ChromatogramPlotOptionsDialogue();
-            if (dialog.ShowDialog() == true)
-            {
-                //
-            }
-
-            e.Handled = true;
-        }
 
         private string _selectedOption = "Line";
         public string SelectedOption

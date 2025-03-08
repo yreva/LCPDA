@@ -8,8 +8,7 @@
         mc:Ignorable="d"
         Title="RawVision - MS Edition" Height="680" Width="950"
         KeyboardNavigation.DirectionalNavigation="None"
-        Background="Gainsboro"
-        Style="{StaticResource WinAll}">
+        Background="Gainsboro">
 
     <Window.Resources>
         <local:EnumToBooleanConverter x:Key="EnumToBooleanConverter"/>

@@ -9,7 +9,9 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Xml.Linq;
+using Microsoft.VisualBasic;
 using RawVision.ViewModels;
+using RawVision.Views;
 using ScottPlot;
 using ScottPlot.Panels;
 using ScottPlot.WPF;
@@ -47,7 +49,11 @@ namespace RawVision.Models
 
             SetColormapByName("Ice", false);
 
-            //_chromatogramPlot.MouseDown += ChromPlot_MouseDown;
+            // subscribe to plot events
+            _chromatogramPlot.MouseDown += ChromPlot_MouseDown;
+            _chromatogramPlot.MouseDoubleClick += ChromPlot_MouseDoubleClick;
+
+            //DisablePlotBenchmarking();
         }
 
         private string _chromatogramStyle;
@@ -290,6 +296,55 @@ namespace RawVision.Models
                     PlotMassSpectrum();
                     ResetVlineOnChomatogram();
                     break;
+
+            }
+        }
+
+
+        private void ChromPlot_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            var window = Application.Current.Windows.OfType<ChromatogramOptionsView>().FirstOrDefault();
+
+            if (window == null)
+            {
+                ChromatogramOptionsView view = new ChromatogramOptionsView();
+                view.Show();
+            }
+            else
+            {
+                window.WindowState = WindowState.Normal;
+                window.Activate();
+                window.Topmost = true;
+                window.Topmost = false;
+            }
+            
+            e.Handled = true;
+        }
+
+        private void ChromPlot_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (_chromatogramViewModel.Times == null)
+            {
+                return;
+            }
+            if (e.LeftButton == MouseButtonState.Pressed)
+            {
+                var mouse = e.GetPosition(_chromatogramPlot);
+                var x = mouse.X;
+                var y = mouse.Y;
+                double clickedX = _chromatogramPlot.Plot.GetCoordinates(new Pixel(x, y)).X;
+
+                if (_chromatogramStyle == "Line")
+                {
+                    // Find the closest time point
+                    double nearestTime = _chromatogramViewModel.Times.OrderBy(x => Math.Abs(x - clickedX)).FirstOrDefault();
+                    // Update ViewModel
+                    PlotSettings.Instance.ScanNumber = GetScanNumberFromRetentionTime(nearestTime);
+                }
+                else
+                {
+                    PlotSettings.Instance.ScanNumber = (int)Math.Abs(clickedX);
+                }
 
             }
         }

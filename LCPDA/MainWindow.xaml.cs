@@ -113,9 +113,13 @@ namespace RawVision.Views
             }
         }
 
-        public void About_Click(object sender, RoutedEventArgs e) 
+        public void About_Click(object sender, RoutedEventArgs e)
         {
-            var DC = DataContext as MainViewModel;
+            About aboutWindow = new About();
+            if (aboutWindow.ShowDialog() == true)
+            {
+                //
+            }
         }
 
         private void ViewModel_SomeEvent()
