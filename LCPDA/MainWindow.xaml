@@ -102,37 +102,33 @@
                         </Grid>
 
                         <!-- First row -->
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Text1" VerticalAlignment="Center" Margin="5"/>
-                        <TextBox Grid.Row="1" Grid.Column="1" Name="IntEntryBox1" Width="100" Margin="5" IsEnabled="False"/>
+                        <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Text=""/>
 
                         <!-- Second row -->
-                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Text2" VerticalAlignment="Center" Margin="5"/>
-                            <TextBox Grid.Row="2" Grid.Column="1" Name="IntEntryBox2" Width="100" Margin="5" IsEnabled="False"/>
-
-                        <!-- Button that spans both columns -->
-                        <Button Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Content="+ 10 Scans" HorizontalAlignment="Stretch" Margin="5" Click="IncrementScanNumber"/>
-
-                        <!-- Button that spans both columns -->
-                        <Button Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Content="+ 1 Scan" HorizontalAlignment="Stretch" Margin="5" Click="IncrementScanNumber"/>
+                        <TextBlock Grid.Row="2" Grid.ColumnSpan="2" Text=""/>
 
                         <!-- Third row -->
+                        <Button Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Content="+ 10 Scans" HorizontalAlignment="Stretch" Margin="5" Click="IncrementScanNumber"/>
+
+                        <!-- Fourth row -->
+                        <Button Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Content="+ 1 Scan" HorizontalAlignment="Stretch" Margin="5" Click="IncrementScanNumber"/>
+
+                        <!-- Fifth row -->
                         <TextBlock Grid.Row="5" Grid.Column="0" Text="Scan #" VerticalAlignment="Center" Margin="5"/>
                         <TextBox Grid.Row="5" Grid.Column="1" Name="IntEntryBox3" Width="100" Margin="5" Text="{Binding CurrentScanNumber}" KeyDown="TextBox_KeyDown"/>
 
-                        <!-- Button that spans both columns -->
-                            <Button Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" Content="- 1 Scan" HorizontalAlignment="Stretch" Margin="5" Click="IncrementScanNumber"/>
+                        <!-- Sixth row -->
+                        <Button Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" Content="- 1 Scan" HorizontalAlignment="Stretch" Margin="5" Click="IncrementScanNumber"/>
 
-                        <!-- Button that spans both columns -->
-                            <Button Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" Content="- 10 Scans" HorizontalAlignment="Stretch" Margin="5" Click="IncrementScanNumber"/>
+                        <!-- Seventh row -->
+                        <Button Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" Content="- 10 Scans" HorizontalAlignment="Stretch" Margin="5" Click="IncrementScanNumber"/>
 
-                        <!-- Fourth row -->
-                        <TextBlock Grid.Row="8" Grid.Column="0" Text="Text4" VerticalAlignment="Center" Margin="5"/>
-                            <TextBox Grid.Row="8" Grid.Column="1" Name="IntEntryBox4" Width="100" Margin="5" IsEnabled="False"/>
+                        <!-- Eighth row -->
+                        <TextBlock Grid.Row="8" Grid.ColumnSpan="2" Text=""/>
 
-                        <!-- Fifth row -->
-                        <TextBlock Grid.Row="9" Grid.Column="0" Text="Text5" VerticalAlignment="Center" Margin="5"/>
-                            <TextBox Grid.Row="9" Grid.Column="1" Name="IntEntryBox5" Width="100" Margin="5" IsEnabled="False"/>
-                    </Grid>
+                        <!-- Ninth row -->
+                            <Button Grid.Row="9" Grid.ColumnSpan="2" Content="Show Peak List" Margin="5" Command="{Binding Command_ShowPeakList}"/>
+                        </Grid>
                 </StackPanel>
 
             </Grid>

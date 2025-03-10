@@ -2,10 +2,46 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:RawVision"
+             xmlns:rsrc="clr-namespace:RawVision.Resources"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
+        <!-- Attempted to do fonts -->
         <Style x:Key="WinAll" TargetType="{x:Type Window}">
             <Setter Property="FontFamily" Value="Consolas"/>
         </Style>
+        <!-- Rounded buttons -->
+        <Style TargetType="Button">
+            <Setter Property="Background" Value="LightGray"/>
+            <Setter Property="Foreground" Value="Black"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                BorderThickness="1" 
+                                BorderBrush="Black" 
+                                CornerRadius="3"
+                                x:Name="border">
+                            <ContentPresenter HorizontalAlignment="Center" 
+                                              VerticalAlignment="Center"
+                                              TextElement.Foreground="{TemplateBinding Foreground}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <!-- Change background when pressed -->
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="LightSteelBlue"/>
+                                <Setter Property="Foreground" Value="Black"/>
+                            </Trigger>
+
+                            <!-- Reduce opacity when disabled -->
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="border" Property="Background" Value="Gray"/>
+                                <Setter TargetName="border" Property="Opacity" Value="0.5"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <rsrc:ColorConverter x:Key="ColorConverter"/>
     </Application.Resources>
 </Application>

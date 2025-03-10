@@ -5,17 +5,13 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:RawVision.Views"
         mc:Ignorable="d"
-        Title="Plot Options" Height="300" Width="257" ResizeMode="CanMinimize">
-
-    <Window.Resources>
-        <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
-    </Window.Resources>
+        Title="Plot Options" Height="375" Width="257" ResizeMode="CanMinimize">
 
     <ScrollViewer>
         <StackPanel>
 
             <TextBlock Text="Chromatogram Plot Options" FontWeight="Bold" Margin="10 5"/>
-            <Rectangle Margin="5 0 0 3" Fill="LightGray" Height="3"></Rectangle>
+            <Rectangle Name="Blank" Margin="5 0 0 3" Fill="LightGray" Height="3"></Rectangle>
 
             <Grid Margin="5 0">
                 <Grid.RowDefinitions>
@@ -33,34 +29,96 @@
 
                 <!-- X Axis Limits -->
                 <TextBlock Text="X Axis Limits:" Grid.Row="0" Grid.Column="0" Margin="5" Grid.ColumnSpan="2"/>
-                <ToggleButton Name="AutoX" Grid.Row="0" Grid.Column="2" Content=" Autoscale X " IsChecked="True" Height="20" HorizontalAlignment="Right" Grid.ColumnSpan="2"/>
+                <Button Name="AutoXButton" Grid.Row="0" Grid.Column="2" Content="   Autoscale X   " Click="OnClick_AutoX" Height="20" HorizontalAlignment="Right" Grid.ColumnSpan="2">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Background" Value="Green"/>
+                            <Setter Property="Foreground" Value="White"/>
+                            <Setter Property="FontWeight" Value="Bold"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="{TemplateBinding Background}" BorderThickness="1" BorderBrush="Black" CornerRadius="5">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                            <Style.Triggers>
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter Property="Background" Value="DarkGreen"/>
+                                    <Setter Property="Foreground" Value="Gray"/>
+                                    <Setter Property="FontWeight" Value="Bold"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
 
-                <TextBlock Text="Min:" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Margin="5"/>
-                <TextBox Grid.Row="1" Grid.Column="1" Width="60" Margin="5" />
+                    <TextBlock Text="Min:" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Margin="5"/>
+                <TextBox Name="XMin" Grid.Row="1" Grid.Column="1" Width="60" Margin="5" KeyDown="EntryBox_KeyDown" LostFocus="EntryBox_LostFocus"/>
                 <TextBlock Text="Max:" Grid.Row="1" Grid.Column="2" VerticalAlignment="Center" Margin="5" HorizontalAlignment="Left"/>
-                <TextBox Grid.Row="1" Grid.Column="3" Width="60" Margin="5" />
+                <TextBox Name="XMax" Grid.Row="1" Grid.Column="3" Width="60" Margin="5" KeyDown="EntryBox_KeyDown" LostFocus="EntryBox_LostFocus"/>
 
                 <!-- Y Axis Limits -->
                 <TextBlock Text="Y Axis Limits:" Grid.Row="2" Grid.Column="0" Margin="5" Grid.ColumnSpan="2"/>
-                <ToggleButton Name="AutoY" Grid.Row="2" Grid.Column="2" Content=" Autoscale Y " IsChecked="True" Height="20" HorizontalAlignment="Right" Grid.ColumnSpan="2"/>
+                <Button Name="AutoYButton" Grid.Row="2" Grid.Column="2" Content="   Autoscale Y   " Click="OnClick_AutoY"  Height="20" HorizontalAlignment="Right" Grid.ColumnSpan="2">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Background" Value="Green"/>
+                            <Setter Property="Foreground" Value="White"/>
+                            <Setter Property="FontWeight" Value="Bold"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="{TemplateBinding Background}" BorderThickness="1" BorderBrush="Black" CornerRadius="5">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                            <Style.Triggers>
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter Property="Background" Value="DarkGreen"/>
+                                    <Setter Property="Foreground" Value="Gray"/>
+                                    <Setter Property="FontWeight" Value="Bold"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
 
 
                 <TextBlock Text="Min:" Grid.Row="3" Grid.Column="0" VerticalAlignment="Center" Margin="5"/>
-                <TextBox Grid.Row="3" Grid.Column="1" Width="60" Margin="5 5 5 10"/>
+                <TextBox Name="YMin" Grid.Row="3" Grid.Column="1" Width="60" Margin="5 5 5 10" KeyDown="EntryBox_KeyDown" LostFocus="EntryBox_LostFocus"/>
                 <TextBlock Text="Max:" Grid.Row="3" Grid.Column="2" VerticalAlignment="Center" Margin="5 5 5 10"/>
-                <TextBox Grid.Row="3" Grid.Column="3" Width="60" Margin="5 5 5 10"/>
+                <TextBox Name="YMax" Grid.Row="3" Grid.Column="3" Width="60" Margin="5 5 5 10" KeyDown="EntryBox_KeyDown" LostFocus="EntryBox_LostFocus"/>
             </Grid>
 
             <Rectangle Margin="5 5" Fill="LightGray" Height="3"></Rectangle>
 
+            <CheckBox Name="VLine" Content="Show Vertical Line for Scan Number"  Margin="5 0 0 2" IsChecked="True" Click="OnChecked_ShowVLine"/>
+            <CheckBox Name="PlotGrid" Content="Show Grid in Plot" Margin="5 0 0 2" IsChecked="True" Click="OnChecked_ShowGrid"/>
+            <CheckBox Name="ScrollEnabled" Content="Allow Mouse to Edit Axes" Margin="5 0 0 0" IsChecked="True" Click="OnChecked_MouseEvents"/>
 
-            <CheckBox Name="VLine" Content="Show Vertical Line for Scan Number"  Margin="5 0 0 2" IsChecked="True"/>
-            <CheckBox Name="PlotGrid" Content="Show Grid in Plot" Margin="5 0 0 0" IsChecked="True"/>
+            <Rectangle Margin="5" Fill="LightGray" Height="3"></Rectangle>
 
-            <Rectangle Margin="5 5" Fill="White" Height="3"></Rectangle>
+            <TextBlock Text="Line Color (for 1D)" HorizontalAlignment="Center"></TextBlock>
+            <ComboBox x:Name="ColorComboBox" SelectionChanged="ColorComboBox_SelectionChanged" Width="150" Height="25">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal">
+                            <Rectangle Width="16" Height="16" Fill="{Binding Converter={StaticResource ColorConverter}}" Margin="5 0"/>
+                            <TextBlock Text="{Binding}" Margin="5 0"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
 
-            <Button Content="Save Settings" Margin="15 5 15 5" VerticalAlignment="Bottom"/>
-            <Button Content="Close Without Saving" Margin="15 0 15 5" VerticalAlignment="Bottom"/>
+            <Rectangle Margin="5 " Fill="LightGray" Height="3"></Rectangle>
+
+            <Button Content="Save Settings" Click="OnClick_SaveSettings" Margin="15 5 15 5" VerticalAlignment="Bottom"/>
+            <Button Content="Close Without Saving" Click="OnClick_CloseNoSave" Margin="15 0 15 5" VerticalAlignment="Bottom"/>
 
 
         </StackPanel>

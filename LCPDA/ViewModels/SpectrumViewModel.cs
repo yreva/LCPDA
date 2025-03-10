@@ -5,11 +5,12 @@ using ThermoFisher.CommonCore.Data.Business;
 using ThermoFisher.CommonCore.Data.Interfaces;
 using System.Collections.Concurrent;
 
+
 namespace RawVision.ViewModels
 {
     public class SpectrumViewModel : INotifyPropertyChanged
     {
-        private ObservableCollection<Point> _dataPoints;
+        private ObservableCollection<ObservableCollection<DataRow>> _peakLists;
         private List<double> uniqueMasses;
         private double[,] _intensities2D;
         private double[,] _log10Intensities2D;
@@ -45,11 +46,19 @@ namespace RawVision.ViewModels
             get { return _log10Intensities2D; }
         }
 
+        public ObservableCollection<ObservableCollection<DataRow>> PeakLists
+        {
+            get => _peakLists;
+            set { _peakLists = value; }
+        }
+
         public SpectrumViewModel()
         {
             mz = new List<double[]>();
             intensity = new List<double[]>();
             scanNumbers = new List<int>();
+
+            PeakLists = new ObservableCollection<ObservableCollection<DataRow>>();
         }
 
         public void SetRawFile(IRawDataExtended rf)
@@ -109,6 +118,7 @@ namespace RawVision.ViewModels
 
                 List<(double Mass, double Intensity)> data = ss.Positions.Zip(ss.Intensities, (m, j) => (m, j)).ToList();
 
+                // this rounds and adds to the mz,intensity lists...
                 RoundMassesToDecimal(data,roundToDecimal);
 
                 scanNumbers.Add(i);
@@ -131,7 +141,6 @@ namespace RawVision.ViewModels
 
             mz.Add(groupedData.Select(item => item.Mass).ToArray());
             intensity.Add(groupedData.Select(item => item.Intensity).ToArray());
-
         }
 
         public static async Task<(List<double>, double[,], double[,])> ProcessIntensityMatrixAsync(
@@ -170,7 +179,11 @@ namespace RawVision.ViewModels
                             // Store intensity data in ConcurrentDictionary
                             intensityStorage.AddOrUpdate(rowIndex,
                                 _ => new double[numScans], // Initialize new row
-                                (_, existingRow) => { existingRow[scanIdx] = intensity; return existingRow; }
+                                (_, existingRow) =>
+                                {
+                                    existingRow[scanIdx] = intensity;
+                                    return existingRow;
+                                }
                             );
                         }
                     }
@@ -189,83 +202,25 @@ namespace RawVision.ViewModels
                 }
             }
 
-            MessageBox.Show("Processing Finished!");
+            MessageBox.Show("Processing Finished, File Loaded.", "Loading Complete", MessageBoxButton.OK, MessageBoxImage.Information);
 
             return (uniqueMZ, intensityVsTime, logIntensityVsTime);
         }
 
-        public (List<double>, double[,]) ProcessAllScansOld(List<double[]> massLists, List<double[]> intensityLists, int numScans)
+        public ObservableCollection<DataRow> CreatePeakList(int ScanNumber)
         {
-            // Step 1: Find all unique mz values
-            HashSet<double> uniqueMzSet = new HashSet<double>(mz.SelectMany(x => x));
-            List<double> uniqueMZ = uniqueMzSet.OrderBy(x => x).ToList();
+            ObservableCollection<DataRow> peaks = new ObservableCollection<DataRow>();
 
-            // Step 2: Initialize intensity matrix (rows = uniqueMZ, columns = scans)
-            double[,] intensityVsTime = new double[uniqueMZ.Count(),numScans-1];
-
-            // Step 3: Populate intensity values
-            for (int scanIdx = 0; scanIdx < mz.Count; scanIdx++)
+            for (int i = 0; i < mz[ScanNumber].Count(); i++)
             {
-                double[] mzScan = mz[scanIdx];
-                double[] intensityScan = intensity[scanIdx];
-
-                for (int i = 0; i < mzScan.Length; i++)
-                {
-                    double currentMz = mzScan[i];
-                    double currentIntensity = intensityScan[i];
-
-                    // Find the index of the currentMz in uniqueMZ
-                    int rowIndex = uniqueMZ.IndexOf(currentMz);  // Could be optimized with a dictionary
-                    if (rowIndex != -1)
-                        intensityVsTime[rowIndex,scanIdx] = currentIntensity;
-                }
+                DataRow row = new DataRow();
+                row.Mass = mz[ScanNumber][i];
+                row.Intensity = intensity[ScanNumber][i];
+                peaks.Add(row);
             }
 
-            return (uniqueMZ, intensityVsTime);
+            return peaks;
         }
-
-        private void ProcessMassSpectra1(List<(double Mass, double Intensity)> data)
-        {
-            double tolerance = 0.0001; // Define tolerance for grouping
-
-            // Sort by mass to ensure correct grouping
-            data = data.OrderBy(d => d.Mass).ToList();
-
-            // List to store grouped data
-            List<(double GroupedMass, double TotalIntensity)> groupedData = new();
-
-            double currentGroupMass = data[0].Mass;
-            double intensitySum = 0;
-            int count = 0;
-
-            foreach (var (mass, intensity) in data)
-            {
-                // If the mass is close enough to the current group, add to the same cluster
-                if (Math.Abs(mass - currentGroupMass) <= tolerance)
-                {
-                    intensitySum += intensity;
-                    count++;
-                }
-                else
-                {
-                    // Store the previous cluster
-                    groupedData.Add((currentGroupMass, intensitySum/count));
-
-                    // Start a new cluster
-                    currentGroupMass = mass;
-                    intensitySum = intensity;
-                    count = 1;
-                }
-            }
-
-            // Add the last group
-            groupedData.Add((currentGroupMass, intensitySum));
-
-            mz.Add(groupedData.Select(item => item.GroupedMass).ToArray());
-            intensity.Add(groupedData.Select(item => item.TotalIntensity).ToArray());
-
-        }
-
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -273,5 +228,11 @@ namespace RawVision.ViewModels
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
+    }
+
+    public class DataRow
+    {
+        public double Mass { get; set; }
+        public double Intensity { get; set; }
     }
 }

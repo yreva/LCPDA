@@ -2,32 +2,37 @@
 using System.Windows;
 using System.Windows.Input;
 using Microsoft.Win32;
-
 using ScottPlot.WPF;
 using ScottPlot;
-using RawVision.Models;
 using RawVision.Models;
 using RawVision.Views;
 
 
 namespace RawVision.ViewModels
 {
+    /*------------------------------------------------------------------------------------------------------------
+     *                                                MainViewModel                                              *
+     * Serves the MainWindow and handles instances of the data managers (Chromatogram and Spectrum View Models)  *                                                                                         *
+     ----------------------------------------------------------------------------------------------------------- */
     public class MainViewModel : INotifyPropertyChanged
     {
-        // Implement PropertyChanged methods
+        //                        Implement PropertyChanged methods
+        /******************************************************************************/
         public event PropertyChangedEventHandler PropertyChanged;
         private void OnPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        // declare private View Models
+        //                          Declare private view models
+        /******************************************************************************/
         private ChromatogramViewModel _chromatogramViewModel;
         private SpectrumViewModel _spectrumViewModel;
         private IOModel _ioModel;
         private PlotModel _plotModel;
-
-        // expose View Models to public
+        
+        //                    Make public view models for the data managers
+        /******************************************************************************/
         public ChromatogramViewModel ChromatogramViewModel
         {
             get => _chromatogramViewModel;
@@ -47,7 +52,8 @@ namespace RawVision.ViewModels
             }
         }
 
-        // define plot elements for UI
+        //                      Declare plots for the UI/MainWindow
+        /******************************************************************************/
         private WpfPlot _chromatogramPlot = new WpfPlot();
         public WpfPlot ChromatogramPlot
         {
@@ -59,23 +65,25 @@ namespace RawVision.ViewModels
             get => _spectrumPlot;
         }
 
-        // Main Class Constructor
+        //                       Constructor for MainViewModel
+        /******************************************************************************/
         public MainViewModel()
         {
             OpenFileCommand = new RelayCommand(OpenFile);
             LoadFileCommand = new RelayCommand(LoadFilePressed);
             SaveDataCommand = new RelayCommand(SaveDataPressed);
+            Command_ShowPeakList = new RelayCommand(ShowPeakListPressed);
 
             // Initialize the ViewModels for both plots
             ChromatogramViewModel = new ChromatogramViewModel();
             SpectrumViewModel = new SpectrumViewModel();
             _ioModel = new IOModel();
-            _plotModel = new PlotModel(_chromatogramPlot, _spectrumPlot, _chromatogramViewModel, _spectrumViewModel);
-            _plotModel.ChromatogramStyle = _currentChromatogramStyle;
+            _plotModel = new PlotModel(_chromatogramPlot,_spectrumPlot, _chromatogramViewModel, _spectrumViewModel);
             _plotModel.PropertyChanged += PropertyChanged;
+
+            PlotSettings.Instance.PropertyChanged += PlotSettings_PropertyChanged;
         }
 
-        private string _currentChromatogramStyle = "Line";
 
         private int _currentScanNumber = 1;
         public int CurrentScanNumber
@@ -108,6 +116,7 @@ namespace RawVision.ViewModels
 
         public void IncrementScan(int increment)
         {
+            CurrentScanNumber = PlotSettings.Instance.ScanNumber;
             if (ChromatogramViewModel.Times == null)
             {
                 return;
@@ -132,19 +141,6 @@ namespace RawVision.ViewModels
             }
         }
 
-        private string _mapScalingMethod = "Linear";
-        public string MapScalingMethod
-        {
-            get => _mapScalingMethod;
-            set
-            {
-                if (value != _mapScalingMethod)
-                {
-                    _mapScalingMethod = value;
-                    OnPropertyChanged(nameof(MapScalingMethod));
-                }
-            }
-        }
 
         public void MassResolutionChanged()
         {
@@ -152,42 +148,6 @@ namespace RawVision.ViewModels
             ChromatogramViewModel = new ChromatogramViewModel();
             SpectrumViewModel = new SpectrumViewModel();
             LoadFilePressed();
-        }
-
-        public ICommand LoadFileCommand { get; }
-        public async void LoadFilePressed()
-        {
-            //HandleLoadingPopup("Start");
-
-            if (SelectedFilePath == null)
-            {
-                return;
-            }
-
-            _currentScanNumber = 1;
-            _ioModel.OpenRawFile(SelectedFilePath);
-            var rf = _ioModel.GetRawFileFromIOModel();
-            _chromatogramViewModel.SetRawFile(rf);
-            _spectrumViewModel.SetMassResolution(MassResolutionDecimal);
-
-            _spectrumViewModel.SetRawFile(rf);
-
-
-            switch (SelectedOption)
-            {
-                case "Line":
-                    _currentChromatogramStyle = "Line";
-                    _plotModel.PlotChromatogram();
-                    break;
-                case "Map":
-                    _currentChromatogramStyle = "Map";
-                    Plot2DChromatogram();
-                    break;
-            }
-
-            _plotModel.PlotMassSpectrum();
-
-            //HandleLoadingPopup("Stop");
         }
 
         private void HandleLoadingPopup(string process)
@@ -210,25 +170,6 @@ namespace RawVision.ViewModels
             }
         }
 
-        public ICommand OpenFileCommand { get; }
-        public void OpenFile()
-        {
-            OpenFileDialog openFileDialog = new OpenFileDialog
-            {
-                Title = "Select a File",
-                Filter = "Raw Files|*.raw;*.Raw;*.RAW",
-                Multiselect = false
-            };
-
-            if (openFileDialog.ShowDialog() == true)
-            {
-                string filePath = openFileDialog.FileName;
-                SelectedFilePath = filePath;
-                //MessageBox.Show($"Selected file: {filePath}");
-                LoadFilePressed();
-            }
-        }
-
         private string _selectedFilePath;
         public string SelectedFilePath
         {
@@ -246,7 +187,7 @@ namespace RawVision.ViewModels
             {
                 return;
             }
-            _plotModel.Plot2DChromatogram(MapScalingMethod);
+            _plotModel.Plot2DChromatogram(PlotSettings.Instance.Chromatogram.MapScaling);
         }
 
         private void ChromatogramStyleChanged()
@@ -254,11 +195,11 @@ namespace RawVision.ViewModels
             switch (SelectedOption)
             {
                 case "Line":
-                    _currentChromatogramStyle = "Line";
+                    PlotSettings.Instance.Chromatogram.Style = "Line";
                     _plotModel.PlotChromatogram();
                     break;
                 case "Map":
-                    _currentChromatogramStyle = "Map";
+                    PlotSettings.Instance.Chromatogram.Style = "Map";
                     Plot2DChromatogram();
                     break;
             }
@@ -296,7 +237,7 @@ namespace RawVision.ViewModels
         public void ScalingMethodChanged()
         {
             //
-            if (_currentChromatogramStyle == "Line")
+            if (PlotSettings.Instance.Chromatogram.Style == "Line")
             {
                 return;
             }
@@ -339,11 +280,91 @@ namespace RawVision.ViewModels
             _plotModel.SetColormapByName(name,reversed);
         }
 
+
+        //                      Commands for Buttons in MainWindow
+        /******************************************************************************/
+
         public ICommand SaveDataCommand { get; }
         public void SaveDataPressed()
         {
             _ioModel.WriteDataToCsv(_spectrumViewModel.UniqueMasses,_chromatogramViewModel.Times,_spectrumViewModel.Intensities2D);
         }
+        public ICommand OpenFileCommand { get; }
+        public void OpenFile()
+        {
+            OpenFileDialog openFileDialog = new OpenFileDialog
+            {
+                Title = "Select a File",
+                Filter = "Raw Files|*.raw;*.Raw;*.RAW",
+                Multiselect = false
+            };
+
+            if (openFileDialog.ShowDialog() == true)
+            {
+                string filePath = openFileDialog.FileName;
+                SelectedFilePath = filePath;
+                //MessageBox.Show($"Selected file: {filePath}");
+                LoadFilePressed();
+            }
+        }
+
+        public ICommand LoadFileCommand { get; }
+        public void LoadFilePressed()
+        {
+            //HandleLoadingPopup("Start");
+
+            if (SelectedFilePath == null)
+            {
+                return;
+            }
+
+            _currentScanNumber = 1;
+            _ioModel.OpenRawFile(SelectedFilePath);
+            var rf = _ioModel.GetRawFileFromIOModel();
+            _chromatogramViewModel.SetRawFile(rf);
+            _spectrumViewModel.SetMassResolution(MassResolutionDecimal);
+
+            _spectrumViewModel.SetRawFile(rf);
+
+
+            switch (SelectedOption)
+            {
+                case "Line":
+                    PlotSettings.Instance.Chromatogram.Style = "Line";
+                    _plotModel.PlotChromatogram();
+                    break;
+                case "Map":
+                    PlotSettings.Instance.Chromatogram.Style = "Map";
+                    Plot2DChromatogram();
+                    break;
+            }
+
+            _plotModel.PlotMassSpectrum();
+
+            //HandleLoadingPopup("Stop");
+        }
+
+        public ICommand Command_ShowPeakList { get; }
+        public void ShowPeakListPressed()
+        {
+            PeakListWindow window = new PeakListWindow();
+            double rt = Math.Round(ChromatogramViewModel.Times[PlotSettings.Instance.ScanNumber - 1],2);
+            window.Header.Text = string.Format("Scan #{0}, at {1} min", PlotSettings.Instance.ScanNumber - 1, rt);
+            window.dataGrid.ItemsSource = SpectrumViewModel.CreatePeakList(PlotSettings.Instance.ScanNumber - 1);
+            window.Show();
+        }
+
+
+        private void PlotSettings_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            switch (e.PropertyName)
+            {
+                case "ScanNumber":
+                    CurrentScanNumber = PlotSettings.Instance.ScanNumber;
+                    break;
+            }
+        }
+
     } //end MainViewModel
 }
 

@@ -1,7 +1,9 @@
-﻿using System.Windows;
+﻿using System.Drawing;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using RawVision.ViewModels;
+using ScottPlot.WPF;
 using ThermoFisher.CommonCore.Data.Business;
 
 namespace RawVision.Views
@@ -20,6 +22,9 @@ namespace RawVision.Views
 
             ChromatogramContainer.Children.Add(viewModel.ChromatogramPlot);
             SpectrumContainer.Children.Add(viewModel.SpectrumPlot);
+            viewModel.ChromatogramPlot.PreviewKeyDown += WpfPlot_KeyDown;
+            viewModel.SpectrumPlot.PreviewKeyDown += WpfPlot_KeyDown;
+
         }
 
         private void MainWindow_PreviewKeyDown(object sender, KeyEventArgs e)
@@ -77,7 +82,27 @@ namespace RawVision.Views
                     DC.IncrementScan(-10);
                     break;
             }
+        }
 
+        private void WpfPlot_KeyDown(object sender, KeyEventArgs e)
+        {
+            // Suppress arrow key interactions
+            if (e.Key == Key.Left || e.Key == Key.Right ||
+                e.Key == Key.Up || e.Key == Key.Down)
+            {
+                e.Handled = true; // Prevent default action
+            }
+
+            switch (e.Key)
+            {
+                case Key.Right:
+                    (DataContext as MainViewModel).IncrementScan(1);
+                    break;
+                case Key.Left:
+                    (DataContext as MainViewModel).IncrementScan(-1);
+                    break;
+
+            }
         }
 
         public void ChangeMassResolution(object sender, RoutedEventArgs e)
@@ -94,10 +119,10 @@ namespace RawVision.Views
         public void ChangeMapScaling(object sender, RoutedEventArgs e)
         {
             var DC = DataContext as MainViewModel;
-            ScalingDialogue dialog = new ScalingDialogue(DC.MapScalingMethod);
+            ScalingDialogue dialog = new ScalingDialogue(PlotSettings.Instance.Chromatogram.MapScaling);
             if (dialog.ShowDialog() == true)
             {
-                DC.MapScalingMethod = dialog.SelectedScalingMethod;
+                PlotSettings.Instance.Chromatogram.MapScaling = dialog.SelectedScalingMethod;
                 DC.ScalingMethodChanged();
             }
         }
@@ -120,11 +145,6 @@ namespace RawVision.Views
             {
                 //
             }
-        }
-
-        private void ViewModel_SomeEvent()
-        {
-            MessageBox.Show("Event triggered!");
         }
     }
 }

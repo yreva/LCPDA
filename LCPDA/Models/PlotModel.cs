@@ -14,6 +14,7 @@ using RawVision.ViewModels;
 using RawVision.Views;
 using ScottPlot;
 using ScottPlot.Panels;
+using ScottPlot.Plottables;
 using ScottPlot.WPF;
 
 namespace RawVision.Models
@@ -29,6 +30,112 @@ namespace RawVision.Models
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
+
+        // PlotSettings changed; A lot of stuff firing off from here.
+        private void PlotSettings_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            switch (e.PropertyName)
+            {
+                case "ScanNumber":
+                    PlotMassSpectrum();
+                    ResetVlineOnChomatogram();
+                    break;
+
+                case "AutoScaleX":
+                    ResetScalingX(true);
+                    _chromatogramPlot.Refresh();
+                    break;
+
+                case "AutoScaleY":
+                    ResetScalingY(true);
+                    break;
+                case "XMin":
+                case "XMax":
+                    SetManualLimits("X");
+                    break;
+
+                case "YMin":
+                case "YMax":
+                    SetManualLimits("Y");
+                    break;
+
+                case "LineColor":
+                    ResetLineColor();
+                    break;
+
+                case "VLineEnabled":
+                    VLineSettingChanged();
+                    break;
+
+                case "GridEnabled":
+                    GridSettingChanged();
+                    break;
+
+                case "MouseEventsEnabled":
+                    MouseEventSettingChanged();
+                    break;
+
+
+            }
+        }
+
+        private void VLineSettingChanged()
+        {
+            //
+            var plt = _chromatogramPlot.Plot;
+            var vline = plt.PlottableList.FirstOrDefault(x => x.ToString().Contains("VerticalLine"));
+            vline.IsVisible = PlotSettings.Instance.Chromatogram.VLineEnabled;
+            _chromatogramPlot.Refresh();
+        }
+
+        private void GridSettingChanged()
+        {
+            if (PlotSettings.Instance.Chromatogram.GridEnabled)
+            {
+                _chromatogramPlot.Plot.ShowGrid();
+            }
+            else
+            {
+                _chromatogramPlot.Plot.HideGrid();
+            }
+            _chromatogramPlot.Refresh();
+        }
+
+        private bool _hasMouseBeenDisabled = false;
+        private void MouseEventSettingChanged()
+        {
+            if (PlotSettings.Instance.Chromatogram.MouseEventsEnabled)
+            {
+                if (_hasMouseBeenDisabled)
+                {
+                    _chromatogramPlot.PreviewMouseWheel -= _chromatogramPlot_MouseWheel;
+                    _chromatogramPlot.PreviewMouseDown -= _chromatogramPlot_MouseDown;
+                    _hasMouseBeenDisabled = false;
+                    return;
+                }
+            }
+            else
+            {
+                _hasMouseBeenDisabled = true;
+                _chromatogramPlot.PreviewMouseWheel += _chromatogramPlot_MouseWheel;
+                _chromatogramPlot.PreviewMouseDown += _chromatogramPlot_MouseDown;
+            }
+        }
+
+        private void _chromatogramPlot_MouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            e.Handled = true;
+        }
+
+        private void _chromatogramPlot_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ClickCount == 2)
+            {
+                return;
+            }
+            e.Handled = true;
+        }
+
         // vars for plots from UI
         private WpfPlot _chromatogramPlot;
         private WpfPlot _spectrumPlot;
@@ -38,14 +145,21 @@ namespace RawVision.Models
         private ChromatogramViewModel _chromatogramViewModel;
         private SpectrumViewModel _spectrumViewModel;
 
+
         public PlotModel(WpfPlot cp, WpfPlot sp, ChromatogramViewModel cvm, SpectrumViewModel svm)
         {
             _chromatogramPlot = cp;
             _spectrumPlot = sp;
+
+            _chromatogramPlot.Plot.Benchmark = new Polygon(new Coordinates[0]);
+
             _chromatogramViewModel = cvm;
             _spectrumViewModel = svm;
 
+            // yay property changed events...
             PlotSettings.Instance.PropertyChanged += PlotSettings_PropertyChanged;
+            PlotSettings.Instance.Chromatogram.PropertyChanged += PlotSettings_PropertyChanged;
+            PlotSettings.Instance.Spectrum.PropertyChanged += PlotSettings_PropertyChanged;
 
             SetColormapByName("Ice", false);
 
@@ -56,19 +170,8 @@ namespace RawVision.Models
             //DisablePlotBenchmarking();
         }
 
-        private string _chromatogramStyle;
-        public string ChromatogramStyle
-        {
-            get { return _chromatogramStyle; }
-            set
-            {
-                _chromatogramStyle = value;
-                OnPropertyChanged(nameof(ChromatogramStyle));
-            }
-        }
 
         private IColormap _colormap;
-
         public IColormap Colormap
         {
             get { return _colormap; }
@@ -80,6 +183,10 @@ namespace RawVision.Models
 
         public void PlotChromatogram()
         {
+            if (_chromatogramViewModel.Times == null)
+            {
+                return;
+            }
             var plt = _chromatogramPlot.Plot;
             plt.Clear();
 
@@ -91,6 +198,7 @@ namespace RawVision.Models
 
             var scatter = plt.Add.ScatterLine(x, y);
             scatter.LineWidth = 1.5F;
+            scatter.Color = PlotSettings.Instance.Chromatogram.LineColor; 
 
             var vline = plt.Add.VerticalLine(_chromatogramViewModel.Times[PlotSettings.Instance.ScanNumber - 1]);
             vline.LineWidth = 1;
@@ -106,9 +214,22 @@ namespace RawVision.Models
             _chromatogramPlot.Refresh();
         }
 
+        private void ResetLineColor()
+        {
+            var plots = _chromatogramPlot.Plot.GetPlottables();
+
+            if (plots.Count() == 0)
+            {
+                return;
+            }
+
+            var line = plots.FirstOrDefault(plt => plt.ToString().Contains("Scatter")) as ScottPlot.Plottables.Scatter;
+            line.Color = PlotSettings.Instance.Chromatogram.LineColor;
+            _chromatogramPlot.Refresh();
+        }
+
         public void Plot2DChromatogram(string style)
         {
-            _chromatogramStyle = style;
             if (style == "Linear")
             {
                 PlotLinearMzMap();
@@ -222,11 +343,12 @@ namespace RawVision.Models
             var vline = plt.PlottableList.FirstOrDefault(x => x.ToString().Contains("VerticalLine"));
             plt.PlottableList.Remove(vline);
 
-            double lineLoc = (_chromatogramStyle == "Line") ? _chromatogramViewModel.Times[PlotSettings.Instance.ScanNumber - 1] : PlotSettings.Instance.ScanNumber;
+            double lineLoc = (PlotSettings.Instance.Chromatogram.Style == "Line") ? _chromatogramViewModel.Times[PlotSettings.Instance.ScanNumber - 1] : PlotSettings.Instance.ScanNumber;
 
             var line = plt.Add.VerticalLine(lineLoc);
             line.LineWidth = 1;
             line.Color = ScottPlot.Color.FromHex("#0f0f0f");
+            line.IsVisible = PlotSettings.Instance.Chromatogram.VLineEnabled;
             _chromatogramPlot.Refresh();
         }
 
@@ -241,6 +363,7 @@ namespace RawVision.Models
 
             plt.Clear();
 
+            var idx = PlotSettings.Instance.ScanNumber;
             var x = _spectrumViewModel.MZ[PlotSettings.Instance.ScanNumber - 1];
             var y = _spectrumViewModel.Intensity[PlotSettings.Instance.ScanNumber - 1];
 
@@ -261,50 +384,63 @@ namespace RawVision.Models
             return x + 1;
         }
 
-        //private void ChromPlot_MouseDown(object sender, MouseButtonEventArgs e)
-        //{
-        //    if (_chromatogramViewModel.Times == null)
-        //    {
-        //        return;
-        //    }
-        //    if (e.LeftButton == MouseButtonState.Pressed)
-        //    {
-        //        var mouse = e.GetPosition(_chromatogramPlot);
-        //        var x = mouse.X;
-        //        var y = mouse.Y;
-        //        double clickedX = _chromatogramPlot.Plot.GetCoordinates(new Pixel(x, y)).X;
-
-        //        if (ChromatogramStyle == "Line")
-        //        {
-        //            // Find the closest time point
-        //            double nearestTime = _chromatogramViewModel.Times.OrderBy(x => Math.Abs(x - clickedX)).FirstOrDefault();
-        //            // Update ViewModel
-        //            ScanNumber = GetScanNumberFromRetentionTime(nearestTime);
-        //        }
-        //        else
-        //        {
-        //            ScanNumber = (int)Math.Abs(clickedX);
-        //        }
-        //    }
-        //}
-
-        private void PlotSettings_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+        private void ResetScalingX(bool auto)
         {
-            switch (e.PropertyName)
+            if (auto)
             {
-                case "ScanNumber":
-                    PlotMassSpectrum();
-                    ResetVlineOnChomatogram();
-                    break;
+                _chromatogramPlot.Plot.Axes.AutoScaleX();
+                _chromatogramPlot.Refresh();
+                return;
+            }
+            // auto was false, so scale manually.
+            SetManualLimits("X");
+        }
+        private void ResetScalingY(bool auto)
+        {
+            if (auto)
+            {
+                _chromatogramPlot.Plot.Axes.AutoScaleY();
+                _chromatogramPlot.Refresh();
+                return;
+            }
+            // auto was false, so scale manually.
+            SetManualLimits("Y");
+        }
 
+        private void SetManualLimits(string axis)
+        {
+            if (axis == "X")
+            {
+                _chromatogramPlot.Plot.Axes.SetLimitsX(PlotSettings.Instance.Chromatogram.XMin, PlotSettings.Instance.Chromatogram.XMax);
+                _chromatogramPlot.Refresh();
+            }
+
+            if (axis == "Y")
+            {
+                _chromatogramPlot.Plot.Axes.SetLimitsY(PlotSettings.Instance.Chromatogram.YMin,
+                    PlotSettings.Instance.Chromatogram.YMax);
+                _chromatogramPlot.Refresh();
             }
         }
 
-
         private void ChromPlot_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            var window = Application.Current.Windows.OfType<ChromatogramOptionsView>().FirstOrDefault();
+            e.Handled = true;
 
+            var limits = _chromatogramPlot.Plot.Axes.GetLimits();
+
+
+            PlotSettings.Instance.Chromatogram.XMin = limits.XRange.Min;
+            PlotSettings.Instance.Chromatogram.XMax = limits.XRange.Max;
+            PlotSettings.Instance.Chromatogram.YMin = limits.YRange.Min;
+            PlotSettings.Instance.Chromatogram.YMax = limits.YRange.Max;
+
+            var x = _chromatogramPlot.Plot.Axes.GetLimits().Left;
+            var y = _chromatogramPlot.Plot.Axes.GetLimits().Right;
+            var z = _chromatogramPlot.Plot.Axes.GetLimits().Bottom;
+            var zz = _chromatogramPlot.Plot.Axes.GetLimits().Top;
+
+            var window = Application.Current.Windows.OfType<ChromatogramOptionsView>().FirstOrDefault();
             if (window == null)
             {
                 ChromatogramOptionsView view = new ChromatogramOptionsView();
@@ -317,9 +453,14 @@ namespace RawVision.Models
                 window.Topmost = true;
                 window.Topmost = false;
             }
-            
-            e.Handled = true;
         }
+
+        private void PrimeScottPlotAxes(WpfPlot plt)
+        {
+            var limits = plt.Plot.Axes.GetLimits();
+            plt.Plot.Axes.SetLimits(limits); 
+        }
+
 
         private void ChromPlot_MouseDown(object sender, MouseButtonEventArgs e)
         {
@@ -334,7 +475,7 @@ namespace RawVision.Models
                 var y = mouse.Y;
                 double clickedX = _chromatogramPlot.Plot.GetCoordinates(new Pixel(x, y)).X;
 
-                if (_chromatogramStyle == "Line")
+                if (PlotSettings.Instance.Chromatogram.Style == "Line")
                 {
                     // Find the closest time point
                     double nearestTime = _chromatogramViewModel.Times.OrderBy(x => Math.Abs(x - clickedX)).FirstOrDefault();
