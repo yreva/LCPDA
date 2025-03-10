@@ -108,8 +108,8 @@ namespace RawVision.Models
             {
                 if (_hasMouseBeenDisabled)
                 {
-                    _chromatogramPlot.PreviewMouseWheel -= _chromatogramPlot_MouseWheel;
-                    _chromatogramPlot.PreviewMouseDown -= _chromatogramPlot_MouseDown;
+                    _chromatogramPlot.PreviewMouseWheel -= _chromatogramPlot_PreviewMouseWheel;
+                    _chromatogramPlot.PreviewMouseDown -= _chromatogramPlot_PreviewMouseDown;
                     _hasMouseBeenDisabled = false;
                     return;
                 }
@@ -117,20 +117,27 @@ namespace RawVision.Models
             else
             {
                 _hasMouseBeenDisabled = true;
-                _chromatogramPlot.PreviewMouseWheel += _chromatogramPlot_MouseWheel;
-                _chromatogramPlot.PreviewMouseDown += _chromatogramPlot_MouseDown;
+                _chromatogramPlot.PreviewMouseWheel += _chromatogramPlot_PreviewMouseWheel;
+                _chromatogramPlot.PreviewMouseDown += _chromatogramPlot_PreviewMouseDown;
             }
         }
 
-        private void _chromatogramPlot_MouseWheel(object sender, MouseWheelEventArgs e)
+        private void _chromatogramPlot_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
         {
             e.Handled = true;
         }
 
-        private void _chromatogramPlot_MouseDown(object sender, MouseButtonEventArgs e)
+        private void _chromatogramPlot_PreviewMouseDown(object sender, MouseButtonEventArgs e)
         {
             if (e.ClickCount == 2)
             {
+                return;
+            }
+
+            if (e.ClickCount == 1)
+            {
+                ChromPlot_MouseDown(sender, e);
+                e.Handled = true;
                 return;
             }
             e.Handled = true;
@@ -429,16 +436,10 @@ namespace RawVision.Models
 
             var limits = _chromatogramPlot.Plot.Axes.GetLimits();
 
-
             PlotSettings.Instance.Chromatogram.XMin = limits.XRange.Min;
             PlotSettings.Instance.Chromatogram.XMax = limits.XRange.Max;
             PlotSettings.Instance.Chromatogram.YMin = limits.YRange.Min;
             PlotSettings.Instance.Chromatogram.YMax = limits.YRange.Max;
-
-            var x = _chromatogramPlot.Plot.Axes.GetLimits().Left;
-            var y = _chromatogramPlot.Plot.Axes.GetLimits().Right;
-            var z = _chromatogramPlot.Plot.Axes.GetLimits().Bottom;
-            var zz = _chromatogramPlot.Plot.Axes.GetLimits().Top;
 
             var window = Application.Current.Windows.OfType<ChromatogramOptionsView>().FirstOrDefault();
             if (window == null)
@@ -454,13 +455,6 @@ namespace RawVision.Models
                 window.Topmost = false;
             }
         }
-
-        private void PrimeScottPlotAxes(WpfPlot plt)
-        {
-            var limits = plt.Plot.Axes.GetLimits();
-            plt.Plot.Axes.SetLimits(limits); 
-        }
-
 
         private void ChromPlot_MouseDown(object sender, MouseButtonEventArgs e)
         {
