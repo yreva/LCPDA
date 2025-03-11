@@ -27,6 +27,8 @@
                 <MenuItem Header="Mass Resolution" Click="ChangeMassResolution"/>
                 <MenuItem Header="Map Scaling" Click="ChangeMapScaling"/>
                 <MenuItem Header="Colormap" Click="ChangeColormap"/>
+                <MenuItem Header="Limit Mass Range" Click="ChangeMassRangeLimit"/>
+
             </MenuItem>
             <MenuItem Header="_Help">
                 <MenuItem Header="About" Click="About_Click"/>
@@ -92,16 +94,19 @@
                         </Grid.ColumnDefinitions>
 
                         <!-- First row -->
-                        <Grid Grid.Row="0" Grid.ColumnSpan="2" HorizontalAlignment="Center">
+                        <GroupBox Header=" Chromatogram View " HorizontalAlignment="Center" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2">
+                        <Grid HorizontalAlignment="Center">
+
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            <RadioButton Grid.Column="0" Margin="10 0 10 0" Content="1D" GroupName="ChromSetting" IsChecked="{Binding SelectedOption, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Line}"/>
-                            <RadioButton Grid.Column="1" Margin="10 0 10 0" Content="2D" GroupName="ChromSetting" IsChecked="{Binding SelectedOption, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Map}"/>
+                            <RadioButton Grid.Column="0" Margin="10 5 10 5" Content="Line" GroupName="ChromSetting" IsChecked="{Binding SelectedOption, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Line}"/>
+                            <RadioButton Grid.Column="1" Margin="10 5 10 5" Content="Map" GroupName="ChromSetting" IsChecked="{Binding SelectedOption, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Map}"/>
                         </Grid>
+                        </GroupBox>
 
-                        <!-- First row -->
+<!-- First row -->
                         <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Text=""/>
 
                         <!-- Second row -->

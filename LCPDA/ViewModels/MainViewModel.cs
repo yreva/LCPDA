@@ -259,6 +259,7 @@ namespace RawVision.ViewModels
             set
             {
                 _selectedOption = value;
+                PlotSettings.Instance.Chromatogram.Style = value;
                 OnPropertyChanged(nameof(SelectedOption));
                 ChromatogramStyleChanged();
             }

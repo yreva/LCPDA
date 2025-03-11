@@ -55,7 +55,7 @@
                     </Button.Style>
                 </Button>
 
-                    <TextBlock Text="Min:" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Margin="5"/>
+                <TextBlock Text="Min:" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Margin="5"/>
                 <TextBox Name="XMin" Grid.Row="1" Grid.Column="1" Width="60" Margin="5" KeyDown="EntryBox_KeyDown" LostFocus="EntryBox_LostFocus"/>
                 <TextBlock Text="Max:" Grid.Row="1" Grid.Column="2" VerticalAlignment="Center" Margin="5" HorizontalAlignment="Left"/>
                 <TextBox Name="XMax" Grid.Row="1" Grid.Column="3" Width="60" Margin="5" KeyDown="EntryBox_KeyDown" LostFocus="EntryBox_LostFocus"/>
@@ -89,7 +89,7 @@
                 </Button>
 
 
-                <TextBlock Text="Min:" Grid.Row="3" Grid.Column="0" VerticalAlignment="Center" Margin="5"/>
+                <TextBlock Text="Min:" Grid.Row="3" Grid.Column="0" VerticalAlignment="Center" Margin="5 5 5 10"/>
                 <TextBox Name="YMin" Grid.Row="3" Grid.Column="1" Width="60" Margin="5 5 5 10" KeyDown="EntryBox_KeyDown" LostFocus="EntryBox_LostFocus"/>
                 <TextBlock Text="Max:" Grid.Row="3" Grid.Column="2" VerticalAlignment="Center" Margin="5 5 5 10"/>
                 <TextBox Name="YMax" Grid.Row="3" Grid.Column="3" Width="60" Margin="5 5 5 10" KeyDown="EntryBox_KeyDown" LostFocus="EntryBox_LostFocus"/>
@@ -103,7 +103,7 @@
 
             <Rectangle Margin="5" Fill="LightGray" Height="3"></Rectangle>
 
-            <TextBlock Text="Line Color (for 1D)" HorizontalAlignment="Center"></TextBlock>
+            <TextBlock Text="Line Color (for 1D)" HorizontalAlignment="Center" Margin="5"></TextBlock>
             <ComboBox x:Name="ColorComboBox" SelectionChanged="ColorComboBox_SelectionChanged" Width="150" Height="25">
                 <ComboBox.ItemTemplate>
                     <DataTemplate>

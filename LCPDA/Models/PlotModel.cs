@@ -81,8 +81,13 @@ namespace RawVision.Models
 
         private void VLineSettingChanged()
         {
-            //
             var plt = _chromatogramPlot.Plot;
+
+            if (plt.GetPlottables().Count() == 0)
+            {
+                return;
+            }
+
             var vline = plt.PlottableList.FirstOrDefault(x => x.ToString().Contains("VerticalLine"));
             vline.IsVisible = PlotSettings.Instance.Chromatogram.VLineEnabled;
             _chromatogramPlot.Refresh();
@@ -237,12 +242,13 @@ namespace RawVision.Models
 
         public void Plot2DChromatogram(string style)
         {
-            if (style == "Linear")
+            var x = PlotSettings.Instance.Chromatogram.MapScaling;
+            if (PlotSettings.Instance.Chromatogram.MapScaling == "Linear")
             {
                 PlotLinearMzMap();
             }
 
-            else if (style == "Log10")
+            else if (PlotSettings.Instance.Chromatogram.MapScaling == "Log10")
             {
                 PlotLog10MzMap();
             }

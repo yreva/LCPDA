@@ -138,6 +138,15 @@ namespace RawVision.Views
             }
         }
 
+        private void ChangeMassRangeLimit(object sender, RoutedEventArgs e)
+        {
+            LimitMassRangeView dialog = new LimitMassRangeView();
+            if (dialog.ShowDialog() == true)
+            {
+
+            }
+        }
+
         public void About_Click(object sender, RoutedEventArgs e)
         {
             About aboutWindow = new About();

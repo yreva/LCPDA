@@ -39,9 +39,6 @@ namespace RawVision
 
         }
 
-        // Example settings
-        public string Theme { get; set; } // "Light" or "Dark"
-
         private int _scanNumber;
         public int ScanNumber
         {
@@ -59,6 +56,41 @@ namespace RawVision
             }
         }
 
+        private bool _massRangeLimitEnabled;
+        public bool MassRangeLimitEnabled
+        {
+            get { return _massRangeLimitEnabled; }
+            set
+            {
+                _massRangeLimitEnabled = value;
+                OnPropertyChanged(nameof(MassRangeLimitEnabled));
+            }
+        }
+
+        private double _massRangeMinimum;
+        public double MassRangeMinimum
+        {
+            get { return _massRangeMinimum; }
+            set
+            {
+                _massRangeMinimum = value;
+                OnPropertyChanged(nameof(MassRangeMinimum));
+            }
+        }
+
+        private double _massRangeMaximum;
+        public double MassRangeMaximum
+        {
+            get { return _massRangeMaximum; }
+            set
+            {
+                _massRangeMaximum = value;
+                OnPropertyChanged(nameof(MassRangeMaximum));
+            }
+        }
+
+
+
     }
 
     public class ChromatogramSettings : BaseSettings
@@ -72,6 +104,8 @@ namespace RawVision
             AutoScaleX = 0;
             AutoScaleY = 0;
             LineColor = ScottPlot.Color.FromSDColor(Color.MidnightBlue);
+            MapScaling = "Linear";
+            Style = "Line";
             MouseEventsEnabled = true;
             GridEnabled = true;
             VLineEnabled = true;
