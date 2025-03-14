@@ -187,7 +187,7 @@ namespace RawVision.ViewModels
             {
                 return;
             }
-            _plotModel.Plot2DChromatogram(PlotSettings.Instance.Chromatogram.MapScaling);
+            _plotModel.Plot2DChromatogram();
         }
 
         private void ChromatogramStyleChanged()

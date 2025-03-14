@@ -4,6 +4,8 @@ using System.Windows;
 using ThermoFisher.CommonCore.Data.Business;
 using ThermoFisher.CommonCore.Data.Interfaces;
 using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
+using RawVision.Views;
 
 
 namespace RawVision.ViewModels
@@ -11,9 +13,15 @@ namespace RawVision.ViewModels
     public class SpectrumViewModel : INotifyPropertyChanged
     {
         private ObservableCollection<ObservableCollection<DataRow>> _peakLists;
+
         private List<double> uniqueMasses;
         private double[,] _intensities2D;
         private double[,] _log10Intensities2D;
+
+        private List<double> _slicedUniqueMasses;
+        private double[,] _slicedIntensities2D;
+        private double[,] _slicedLog10Intensities2D;
+
         private List<double[]> mz;
         private List<double[]> intensity;
         private List<int> scanNumbers;
@@ -44,6 +52,46 @@ namespace RawVision.ViewModels
         public double[,] Log10Intensities2D
         {
             get { return _log10Intensities2D; }
+        }
+
+        public List<double> SlicedUniqueMasses
+        {
+            get { return _slicedUniqueMasses; }
+            set { _slicedUniqueMasses = value; }
+        }
+
+        public double[,] SlicedIntensities2D
+        {
+            get { return _slicedIntensities2D; }
+            set { _slicedIntensities2D = value; }
+        }
+
+        public double[,] SlicedLog10Intensities2D
+        {
+            get { return _slicedLog10Intensities2D; }
+            set { _slicedLog10Intensities2D = value; }
+        }
+
+        private string _polarity;
+        public string Polarity
+        {
+            get => _polarity;
+            set
+            {
+                _polarity = value;
+                OnPropertyChanged(nameof(Polarity));
+            }
+        }
+
+        private string _numberOfScans;
+        public string NumberOfScans
+        {
+            get => _numberOfScans;
+            set
+            {
+                _numberOfScans = value;
+                OnPropertyChanged(nameof(NumberOfScans));
+            }
         }
 
         public ObservableCollection<ObservableCollection<DataRow>> PeakLists
@@ -98,13 +146,7 @@ namespace RawVision.ViewModels
                 }
 
                 massSpectraIdx.Add(i);
-            }
 
-            List<double[]> massList = new List<double[]>();
-            List<double[]> massIntensities = new List<double[]>();
-
-            foreach (int i in massSpectraIdx)
-            {
                 var scanStatistics = _rawFile.GetScanStatsForScanNumber(i);
 
                 if (scanStatistics.IsCentroidScan)
@@ -119,10 +161,13 @@ namespace RawVision.ViewModels
                 List<(double Mass, double Intensity)> data = ss.Positions.Zip(ss.Intensities, (m, j) => (m, j)).ToList();
 
                 // this rounds and adds to the mz,intensity lists...
-                RoundMassesToDecimal(data,roundToDecimal);
+                RoundMassesToDecimal(data, roundToDecimal);
 
                 scanNumbers.Add(i);
             }
+
+            Polarity = _rawFile.GetFilterForScanNumber(scanNumbers[0]).Polarity.ToString();
+            NumberOfScans = scanNumbers.Count().ToString();
 
             var result = await ProcessIntensityMatrixAsync(mz, intensity, scanNumbers.Count());
 
@@ -202,7 +247,9 @@ namespace RawVision.ViewModels
                 }
             }
 
-            MessageBox.Show("Processing Finished, File Loaded.", "Loading Complete", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show(Application.Current.MainWindow,"Processing Finished, File Loaded.", "Loading Complete", MessageBoxButton.OK, MessageBoxImage.Information);
+
+            
 
             return (uniqueMZ, intensityVsTime, logIntensityVsTime);
         }
@@ -220,6 +267,36 @@ namespace RawVision.ViewModels
             }
 
             return peaks;
+        }
+
+        public void TrimDataToMassRange()
+        {
+            var min = PlotSettings.Instance.MassRangeMinimum;
+            var max = PlotSettings.Instance.MassRangeMaximum;
+
+            // Get the indices of values between Min and Max
+            var indices = UniqueMasses
+                .Select((value, index) => new { value, index })
+                .Where(pair => pair.value >= min && pair.value <= max)
+                .Select(pair => pair.index)
+                .ToArray();
+
+            // Create a new 2D array for the selected rows
+            SlicedIntensities2D = new double[indices.Length, Intensities2D.GetLength(1)];
+            SlicedLog10Intensities2D = new double[indices.Length, Intensities2D.GetLength(1)];
+            SlicedUniqueMasses = new List<double>();
+
+            // Fill the new array with the selected rows
+            for (int i = 0; i < indices.Length; i++)
+            {
+                SlicedUniqueMasses.Add(UniqueMasses[indices[i]]);
+                int rowIndex = indices[i];
+                for (int j = 0; j < Intensities2D.GetLength(1); j++)
+                {
+                    SlicedIntensities2D[i, j] = Intensities2D[rowIndex, j];
+                    SlicedLog10Intensities2D[i, j] = Log10Intensities2D[rowIndex, j];
+                }
+            }
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

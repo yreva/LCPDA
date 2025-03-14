@@ -1,8 +1,10 @@
-﻿using System.Drawing;
+﻿using System.ComponentModel;
+using System.Drawing;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using RawVision.ViewModels;
+using ScottPlot;
 using ScottPlot.WPF;
 using ThermoFisher.CommonCore.Data.Business;
 
@@ -24,11 +26,24 @@ namespace RawVision.Views
             SpectrumContainer.Children.Add(viewModel.SpectrumPlot);
             viewModel.ChromatogramPlot.PreviewKeyDown += WpfPlot_KeyDown;
             viewModel.SpectrumPlot.PreviewKeyDown += WpfPlot_KeyDown;
-
+            viewModel.SpectrumViewModel.PropertyChanged += SpectrumViewModel_OnPropertyChanged;
         }
 
         private void MainWindow_PreviewKeyDown(object sender, KeyEventArgs e)
         {
+        }
+
+        private void SpectrumViewModel_OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            switch (e.PropertyName)
+            {
+                case "Polarity":
+                    Info_Polarity.Text = (sender as SpectrumViewModel).Polarity;
+                    break;
+                case "NumberOfScans":
+                    Info_NumberOfScans.Text = (sender as SpectrumViewModel).NumberOfScans;
+                    break;
+            }
         }
 
         private void TextBox_KeyDown(object sender, KeyEventArgs e)
@@ -120,6 +135,10 @@ namespace RawVision.Views
         {
             var DC = DataContext as MainViewModel;
             ScalingDialogue dialog = new ScalingDialogue(PlotSettings.Instance.Chromatogram.MapScaling);
+
+            dialog.Left = this.Left - 200;
+            dialog.Top = this.Top;
+
             if (dialog.ShowDialog() == true)
             {
                 PlotSettings.Instance.Chromatogram.MapScaling = dialog.SelectedScalingMethod;
@@ -131,6 +150,10 @@ namespace RawVision.Views
         {
             var DC = DataContext as MainViewModel;
             ColormapSettingsDialogue dialog = new ColormapSettingsDialogue(DC.GetColormapSetting());
+
+            dialog.Left = this.Left - 300;
+            dialog.Top = this.Top;
+
             if (dialog.ShowDialog() == true)
             {
                 DC.SetColormapSetting(dialog.SelectColormapName);
@@ -153,6 +176,14 @@ namespace RawVision.Views
             if (aboutWindow.ShowDialog() == true)
             {
                 //
+            }
+        }
+
+        private void MainWindow_OnClosed(object? sender, EventArgs e)
+        {
+            foreach (var window in Application.Current.Windows)
+            {
+                (window as Window).Close();
             }
         }
     }

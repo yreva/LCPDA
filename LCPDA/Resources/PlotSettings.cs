@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.DirectoryServices.ActiveDirectory;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using RawVision.Views;
 using ScottPlot;
 using ThermoFisher.CommonCore.Data.Business;
 using Color = System.Drawing.Color;
@@ -33,10 +35,12 @@ namespace RawVision
         private PlotSettings()
         {
             ScanNumber = 1;
+            MassRangeMinimum = 0;
+            MassRangeMaximum = 0;
+            MassRangeLimitEnabled = false;
 
             Chromatogram = new ChromatogramSettings();
             Spectrum = new SpectrumSettings();
-
         }
 
         private int _scanNumber;
@@ -45,7 +49,7 @@ namespace RawVision
             get { return _scanNumber; }
             set
             {
-                if (value == 0)
+                if (value <= 0)
                 {
                     _scanNumber = 1;
                     OnPropertyChanged(nameof(ScanNumber));
@@ -101,6 +105,8 @@ namespace RawVision
             YMin = 0;
             XMax = 0;
             YMax = 0;
+            ColorMin = double.NaN;
+            ColorMax = double.NaN;
             AutoScaleX = 0;
             AutoScaleY = 0;
             LineColor = ScottPlot.Color.FromSDColor(Color.MidnightBlue);
@@ -115,6 +121,8 @@ namespace RawVision
         private double _xMax;
         private double _yMin;
         private double _yMax;
+        private double _colorMin;
+        private double _colorMax;
 
         private bool _mouseEventsEnabled;
         private bool _gridEnabled;
@@ -144,6 +152,18 @@ namespace RawVision
             set => SetProperty(ref _yMax, value, nameof(YMax));
         }
 
+        public double ColorMin
+        {
+            get => _colorMin;
+            set => SetProperty(ref _colorMin, value, nameof(ColorMin));
+        }
+
+        public double ColorMax
+        {
+            get => _colorMax;
+            set => SetProperty(ref _colorMax, value, nameof(ColorMax));
+        }
+
         public bool MouseEventsEnabled
         {
             get => _mouseEventsEnabled;
@@ -152,14 +172,14 @@ namespace RawVision
 
         public bool GridEnabled
         {
-            get => _mouseEventsEnabled;
-            set => SetProperty(ref _mouseEventsEnabled, value, nameof(GridEnabled));
+            get => _gridEnabled;
+            set => SetProperty(ref _gridEnabled, value, nameof(GridEnabled));
         }
 
         public bool VLineEnabled
         {
-            get => _mouseEventsEnabled;
-            set => SetProperty(ref _mouseEventsEnabled, value, nameof(VLineEnabled));
+            get => _vLineEnabled;
+            set => SetProperty(ref _vLineEnabled, value, nameof(VLineEnabled));
         }
 
         private int _autoScaleX;

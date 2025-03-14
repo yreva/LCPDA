@@ -26,79 +26,105 @@ namespace RawVision.Views
     /// </summary>
     public partial class ChromatogramOptionsView : Window
     {
-        private int AutoXSetting;
-        private int AutoYSetting;
-        private double XMinSetting;
-        private double XMaxSetting;
-        private double YMinSetting;
-        private double YMaxSetting;
+        private int previous_AutoX;
+        private int previous_AutoY;
+        private double previous_XMin;
+        private double previous_XMax;
+        private double previous_YMin;
+        private double previous_YMax;
+        private double previous_ColorMin;
+        private double previous_ColorMax;
 
-        private ScottPlot.Color Previous_Color;
+        private bool previous_Vline;
+        private bool previous_PlotGrid;
+        private bool previous_ScrollEnabled;
+
+        private ScottPlot.Color previous_Color;
 
         public ChromatogramOptionsView()
         {
             InitializeComponent();
             LoadColors();
-            AutoXSetting = PlotSettings.Instance.Chromatogram.AutoScaleX;
-            AutoYSetting = PlotSettings.Instance.Chromatogram.AutoScaleY;
-            XMinSetting = PlotSettings.Instance.Chromatogram.XMin;
-            XMaxSetting = PlotSettings.Instance.Chromatogram.XMax;
-            YMinSetting = PlotSettings.Instance.Chromatogram.YMin;
-            YMaxSetting = PlotSettings.Instance.Chromatogram.YMax;
-            XMin.Text = Math.Round(XMinSetting,2).ToString();
-            YMin.Text = Math.Round(YMinSetting,2).ToString();
-            XMax.Text = Math.Round(XMaxSetting,2).ToString();
-            YMax.Text = Math.Round(YMaxSetting,2).ToString();
+            previous_AutoX = PlotSettings.Instance.Chromatogram.AutoScaleX;
+            previous_AutoY = PlotSettings.Instance.Chromatogram.AutoScaleY;
+            previous_XMin = PlotSettings.Instance.Chromatogram.XMin;
+            previous_XMax = PlotSettings.Instance.Chromatogram.XMax;
+            previous_YMin = PlotSettings.Instance.Chromatogram.YMin;
+            previous_YMax = PlotSettings.Instance.Chromatogram.YMax;
+            XMin.Text = Math.Round(previous_XMin,2).ToString();
+            YMin.Text = Math.Round(previous_YMin,2).ToString();
+            XMax.Text = Math.Round(previous_XMax,2).ToString();
+            YMax.Text = Math.Round(previous_YMax,2).ToString();
 
             VLine.IsChecked = PlotSettings.Instance.Chromatogram.VLineEnabled;
             PlotGrid.IsChecked = PlotSettings.Instance.Chromatogram.GridEnabled;
             ScrollEnabled.IsChecked = PlotSettings.Instance.Chromatogram.MouseEventsEnabled;
 
-            Previous_Color = PlotSettings.Instance.Chromatogram.LineColor;
+            previous_Color = PlotSettings.Instance.Chromatogram.LineColor;
+            previous_Vline = PlotSettings.Instance.Chromatogram.VLineEnabled;
+            previous_PlotGrid = PlotSettings.Instance.Chromatogram.GridEnabled;
+            previous_ScrollEnabled = PlotSettings.Instance.Chromatogram.MouseEventsEnabled;
+
+            if (!double.IsNaN(PlotSettings.Instance.Chromatogram.ColorMin))
+            {
+                ColorMin.Text = PlotSettings.Instance.Chromatogram.ColorMin.ToString();
+                previous_ColorMin = PlotSettings.Instance.Chromatogram.ColorMin;
+            }
+            if (!double.IsNaN(PlotSettings.Instance.Chromatogram.ColorMax))
+            {
+                ColorMax.Text = PlotSettings.Instance.Chromatogram.ColorMax.ToString();
+                previous_ColorMax = PlotSettings.Instance.Chromatogram.ColorMax;
+
+            }
         }
 
         private void OnClick_SaveSettings(object sender, RoutedEventArgs e)
         {
-            //
             this.Close();
         }
 
         private void OnClick_CloseNoSave(object sender, RoutedEventArgs e)
         {
 
-            PlotSettings.Instance.Chromatogram.AutoScaleX = AutoXSetting;
-            PlotSettings.Instance.Chromatogram.AutoScaleY = AutoYSetting;
-            PlotSettings.Instance.Chromatogram.XMin = XMinSetting;
-            PlotSettings.Instance.Chromatogram.XMax = XMaxSetting;
-            PlotSettings.Instance.Chromatogram.YMin = YMinSetting;
-            PlotSettings.Instance.Chromatogram.YMax = YMaxSetting;
-            PlotSettings.Instance.Chromatogram.LineColor = Previous_Color;
+            PlotSettings.Instance.Chromatogram.AutoScaleX = previous_AutoX;
+            PlotSettings.Instance.Chromatogram.AutoScaleY = previous_AutoY;
+            PlotSettings.Instance.Chromatogram.XMin = previous_XMin;
+            PlotSettings.Instance.Chromatogram.XMax = previous_XMax;
+            PlotSettings.Instance.Chromatogram.YMin = previous_YMin;
+            PlotSettings.Instance.Chromatogram.YMax = previous_YMax;
+            PlotSettings.Instance.Chromatogram.ColorMin = previous_ColorMin;
+            PlotSettings.Instance.Chromatogram.ColorMax = previous_ColorMax;
+            PlotSettings.Instance.Chromatogram.LineColor = previous_Color;
+            PlotSettings.Instance.Chromatogram.VLineEnabled = previous_Vline;
+            PlotSettings.Instance.Chromatogram.GridEnabled = previous_PlotGrid;
+            PlotSettings.Instance.Chromatogram.MouseEventsEnabled = previous_ScrollEnabled;
+
             this.Close();
         }
 
         private void OnClick_AutoX(object sender, RoutedEventArgs e)
         {
             PlotSettings.Instance.Chromatogram.AutoScaleX += 1;
-            XMin.Text = Math.Round(XMinSetting, 2).ToString();
-            XMax.Text = Math.Round(XMaxSetting, 2).ToString();
+            XMin.Text = Math.Round(previous_XMin, 2).ToString();
+            XMax.Text = Math.Round(previous_XMax, 2).ToString();
 
         }
 
         private void OnClick_AutoY(object sender, RoutedEventArgs e)
         {
             PlotSettings.Instance.Chromatogram.AutoScaleY += 1;
-            YMin.Text = Math.Round(YMinSetting, 2).ToString();
-            YMax.Text = Math.Round(YMaxSetting, 2).ToString();
+            YMin.Text = Math.Round(previous_YMin, 2).ToString();
+            YMax.Text = Math.Round(previous_YMax, 2).ToString();
         }
 
         private void OnChecked_ShowVLine(object sender, RoutedEventArgs e)
         {
-            PlotSettings.Instance.Chromatogram.VLineEnabled = (sender as CheckBox).IsChecked.Value;
+            PlotSettings.Instance.Chromatogram.VLineEnabled = (sender as CheckBox).IsChecked.GetValueOrDefault();
         }
 
         private void OnChecked_ShowGrid(object sender, RoutedEventArgs e)
         {
-            PlotSettings.Instance.Chromatogram.GridEnabled = (sender as CheckBox).IsChecked.Value;
+            PlotSettings.Instance.Chromatogram.GridEnabled = (sender as CheckBox).IsChecked.GetValueOrDefault();
 
         }
 
@@ -139,6 +165,12 @@ namespace RawVision.Views
                             break;
                         case "YMax":
                             PlotSettings.Instance.Chromatogram.YMax = newValue;
+                            break;
+                        case "ColorMin":
+                            PlotSettings.Instance.Chromatogram.ColorMin = newValue;
+                            break;
+                        case "ColorMax":
+                            PlotSettings.Instance.Chromatogram.ColorMax = newValue;
                             break;
                     }
                 }
@@ -196,6 +228,12 @@ namespace RawVision.Views
                         break;
                     case "YMax":
                         PlotSettings.Instance.Chromatogram.YMax = newValue;
+                        break;
+                    case "ColorMin":
+                        PlotSettings.Instance.Chromatogram.ColorMin = newValue;
+                        break;
+                    case "ColorMax":
+                        PlotSettings.Instance.Chromatogram.ColorMax = newValue;
                         break;
                 }
             }

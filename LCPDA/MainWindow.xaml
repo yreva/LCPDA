@@ -6,9 +6,10 @@
         xmlns:local="clr-namespace:RawVision"
         xmlns:sp="clr-namespace:ScottPlot.WPF;assembly=ScottPlot.WPF"
         mc:Ignorable="d"
-        Title="RawVision - MS Edition" Height="680" Width="950"
+        Title="RawVision - MS Edition" Height="900" Width="950"
         KeyboardNavigation.DirectionalNavigation="None"
-        Background="Gainsboro">
+        Background="Gainsboro"
+        Closed="MainWindow_OnClosed">
 
     <Window.Resources>
         <local:EnumToBooleanConverter x:Key="EnumToBooleanConverter"/>
@@ -55,7 +56,7 @@
             <!-- First Frame (Chromatogram Canvas) -->
             <Border BorderBrush="Black" BorderThickness="1" Grid.Row="0">
                 <!-- Placeholder for plot (use image or external control for actual plot) -->
-                <Grid x:Name="ChromatogramContainer" Margin="0,0,0,0" Height="222"/>
+                <Grid x:Name="ChromatogramContainer" Margin="0,0,0,0" Height="400"/>
             </Border>
 
             <!-- Second Frame (Settings Controls for Min RT, Max RT, etc.) -->
@@ -70,71 +71,79 @@
 
                 <Border BorderBrush="Black" BorderThickness="1" Grid.Row="0">
                     <!-- Placeholder for plot (use image or external control for actual plot) -->
-                    <Grid x:Name="SpectrumContainer" Height="275"/>
+                    <Grid x:Name="SpectrumContainer" Height="350"/>
                 </Border>
 
                 <StackPanel Grid.Column="2" Margin="5 5 5 5">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
+                        <!-- First row -->
+                        <GroupBox Header=" Chromatogram View " HorizontalAlignment="Center" Width="175">
+                            <Grid HorizontalAlignment="Center">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <RadioButton Grid.Column="0" Margin="10 5 10 5" Content="Line" GroupName="ChromSetting" IsChecked="{Binding SelectedOption, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Line}"/>
+                                <RadioButton Grid.Column="1" Margin="10 5 10 5" Content="Map" GroupName="ChromSetting" IsChecked="{Binding SelectedOption, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Map}"/>
+                            </Grid>
+                        </GroupBox>
 
                         <!-- First row -->
-                        <GroupBox Header=" Chromatogram View " HorizontalAlignment="Center" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2">
+                        <TextBlock Text="" Height="10"/>
+
+                        <!-- Third row -->
+                        <Button Content="+ 10 Scans" HorizontalAlignment="Stretch" Margin="5" Click="IncrementScanNumber"/>
+
+                        <!-- Fourth row -->
+                        <Button Content="+ 1 Scan" HorizontalAlignment="Stretch" Margin="5" Click="IncrementScanNumber"/>
+
+                        <!-- Fifth row -->
                         <Grid HorizontalAlignment="Center">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
 
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            <RadioButton Grid.Column="0" Margin="10 5 10 5" Content="Line" GroupName="ChromSetting" IsChecked="{Binding SelectedOption, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Line}"/>
-                            <RadioButton Grid.Column="1" Margin="10 5 10 5" Content="Map" GroupName="ChromSetting" IsChecked="{Binding SelectedOption, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Map}"/>
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Scan #" VerticalAlignment="Center" Margin="5"/>
+                            <TextBox Grid.Row="0" Grid.Column="1" Name="IntEntryBox3" Width="100" Margin="5" Text="{Binding CurrentScanNumber}" KeyDown="TextBox_KeyDown"/>
                         </Grid>
-                        </GroupBox>
-
-<!-- First row -->
-                        <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Text=""/>
-
-                        <!-- Second row -->
-                        <TextBlock Grid.Row="2" Grid.ColumnSpan="2" Text=""/>
-
-                        <!-- Third row -->
-                        <Button Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Content="+ 10 Scans" HorizontalAlignment="Stretch" Margin="5" Click="IncrementScanNumber"/>
-
-                        <!-- Fourth row -->
-                        <Button Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Content="+ 1 Scan" HorizontalAlignment="Stretch" Margin="5" Click="IncrementScanNumber"/>
-
-                        <!-- Fifth row -->
-                        <TextBlock Grid.Row="5" Grid.Column="0" Text="Scan #" VerticalAlignment="Center" Margin="5"/>
-                        <TextBox Grid.Row="5" Grid.Column="1" Name="IntEntryBox3" Width="100" Margin="5" Text="{Binding CurrentScanNumber}" KeyDown="TextBox_KeyDown"/>
 
                         <!-- Sixth row -->
-                        <Button Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" Content="- 1 Scan" HorizontalAlignment="Stretch" Margin="5" Click="IncrementScanNumber"/>
+                        <Button Content="- 1 Scan" HorizontalAlignment="Stretch" Margin="5" Click="IncrementScanNumber"/>
 
                         <!-- Seventh row -->
-                        <Button Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" Content="- 10 Scans" HorizontalAlignment="Stretch" Margin="5" Click="IncrementScanNumber"/>
+                        <Button Content="- 10 Scans" HorizontalAlignment="Stretch" Margin="5" Click="IncrementScanNumber"/>
 
                         <!-- Eighth row -->
-                        <TextBlock Grid.Row="8" Grid.ColumnSpan="2" Text=""/>
+                        <TextBlock Text=""/>
 
                         <!-- Ninth row -->
-                            <Button Grid.Row="9" Grid.ColumnSpan="2" Content="Show Peak List" Margin="5" Command="{Binding Command_ShowPeakList}"/>
-                        </Grid>
-                </StackPanel>
+                        <Button Content="Show Peak List" Margin="5" Command="{Binding Command_ShowPeakList}"/>
+
+                        <TextBlock Text=""/>
+
+                        <GroupBox Header=" Scan Information " HorizontalAlignment="Center" Width="175">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <TextBlock Grid.Row="0" Grid.Column="0" Margin="5 0" Text="Scan Filter:"/>
+                                <TextBlock Grid.Row="1" Grid.Column="0" Margin="5 0" Text="Scan Polarity:"/>
+                                <TextBlock Grid.Row="2" Grid.Column="0" Margin="5 0" Text="Number of Scans:"/>
+                                <TextBlock Grid.Row="0" Grid.Column="1" Margin="5 0" Name="Info_ScanFilter" Text="MS"/>
+                                <TextBlock Grid.Row="1" Grid.Column="1" Margin="5 0" Name="Info_Polarity"/>
+                                <TextBlock Grid.Row="2" Grid.Column="1" Margin="5 0" Name="Info_NumberOfScans"/>
+                            </Grid>
+                        </GroupBox>
+                    </StackPanel>
 
             </Grid>
 

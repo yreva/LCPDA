@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:RawVision.Views"
         mc:Ignorable="d"
-        Title="Plot Options" Height="375" Width="257" ResizeMode="CanMinimize">
+        Title="Plot Options" Height="430" Width="257" ResizeMode="CanMinimize">
 
     <ScrollViewer>
         <StackPanel>
@@ -97,13 +97,13 @@
 
             <Rectangle Margin="5 5" Fill="LightGray" Height="3"></Rectangle>
 
-            <CheckBox Name="VLine" Content="Show Vertical Line for Scan Number"  Margin="5 0 0 2" IsChecked="True" Click="OnChecked_ShowVLine"/>
-            <CheckBox Name="PlotGrid" Content="Show Grid in Plot" Margin="5 0 0 2" IsChecked="True" Click="OnChecked_ShowGrid"/>
-            <CheckBox Name="ScrollEnabled" Content="Allow Mouse to Edit Axes" Margin="5 0 0 0" IsChecked="True" Click="OnChecked_MouseEvents"/>
+            <CheckBox Name="VLine" Content="Show Vertical Line for Scan Number"  Margin="5 0 0 2" Click="OnChecked_ShowVLine"/>
+            <CheckBox Name="PlotGrid" Content="Show Grid in Plot" Margin="5 0 0 2"  Click="OnChecked_ShowGrid"/>
+            <CheckBox Name="ScrollEnabled" Content="Allow Mouse to Edit Axes" Margin="5 0 0 0" Click="OnChecked_MouseEvents"/>
 
             <Rectangle Margin="5" Fill="LightGray" Height="3"></Rectangle>
 
-            <TextBlock Text="Line Color (for 1D)" HorizontalAlignment="Center" Margin="5"></TextBlock>
+            <TextBlock Text="Line Color" HorizontalAlignment="Center" Margin="5 0 5 2"></TextBlock>
             <ComboBox x:Name="ColorComboBox" SelectionChanged="ColorComboBox_SelectionChanged" Width="150" Height="25">
                 <ComboBox.ItemTemplate>
                     <DataTemplate>
@@ -116,6 +116,24 @@
             </ComboBox>
 
             <Rectangle Margin="5 " Fill="LightGray" Height="3"></Rectangle>
+
+            <TextBlock Text="Color Axis Limits" HorizontalAlignment="Center" Margin="5 0 5 2"></TextBlock>
+            <Grid HorizontalAlignment="Center">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Text="Min:" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Margin="5"/>
+                <TextBox Name="ColorMin" Grid.Row="0" Grid.Column="1" Width="60" Margin="5" KeyDown="EntryBox_KeyDown" LostFocus="EntryBox_LostFocus"/>
+                <TextBlock Text="Max:" Grid.Row="0" Grid.Column="2" VerticalAlignment="Center" Margin="5" HorizontalAlignment="Left"/>
+                <TextBox Name="ColorMax" Grid.Row="0" Grid.Column="3" Width="60" Margin="5" KeyDown="EntryBox_KeyDown" LostFocus="EntryBox_LostFocus"/>
+
+            </Grid>
+
+            <Rectangle Margin="5" Fill="LightGray" Height="3"></Rectangle>
 
             <Button Content="Save Settings" Click="OnClick_SaveSettings" Margin="15 5 15 5" VerticalAlignment="Bottom"/>
             <Button Content="Close Without Saving" Click="OnClick_CloseNoSave" Margin="15 0 15 5" VerticalAlignment="Bottom"/>

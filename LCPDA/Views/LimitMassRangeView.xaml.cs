@@ -12,6 +12,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using ScottPlot;
 
 namespace RawVision.Views
 {
@@ -23,16 +24,36 @@ namespace RawVision.Views
         public LimitMassRangeView()
         {
             InitializeComponent();
+            LimitEnabled.IsChecked = PlotSettings.Instance.MassRangeLimitEnabled;
+            if (PlotSettings.Instance.MassRangeLimitEnabled)
+            {
+                MassMin.Text = Math.Round(PlotSettings.Instance.MassRangeMinimum, 2).ToString();
+                MassMax.Text = Math.Round(PlotSettings.Instance.MassRangeMaximum, 2).ToString();
+                MassMin.IsEnabled = true;
+                MassMax.IsEnabled = true;
+            }
         }
 
         private void CheckboxChanged(object sender, RoutedEventArgs e)
         {
+            return;
             PlotSettings.Instance.MassRangeLimitEnabled = LimitEnabled.IsChecked.GetValueOrDefault();
-
+            if (PlotSettings.Instance.MassRangeLimitEnabled)
+            {
+                MassMin.Text = Math.Round(PlotSettings.Instance.MassRangeMinimum, 2).ToString();
+                MassMax.Text = Math.Round(PlotSettings.Instance.MassRangeMaximum, 2).ToString();
+            }
+            else
+            {
+                MassMin.Text = "";
+                MassMin.IsEnabled = false;
+                MassMax.Text = "";
+                MassMax.IsEnabled = false;
+            }
         }
         private void EntryBox_KeyDown(object sender, KeyEventArgs e)
         {
-
+            return;
             double newValue = 0;
             if (e.Key == Key.Enter)
             {
@@ -62,6 +83,7 @@ namespace RawVision.Views
 
         private void EntryBox_LostFocus(object sender, RoutedEventArgs e)
         {
+            return;
             double newValue = 0;
             if (double.TryParse((sender as TextBox).Text, out double result))
             {
@@ -78,6 +100,18 @@ namespace RawVision.Views
                         break;
                 }
             }
+        }
+
+        private void OnClick_CloseWindow(object sender, RoutedEventArgs e)
+        {
+            double.TryParse(MassMin.Text, out double minVal);
+            PlotSettings.Instance.MassRangeMinimum = minVal;
+
+            double.TryParse(MassMax.Text, out double maxVal);
+            PlotSettings.Instance.MassRangeMaximum = maxVal;
+
+            PlotSettings.Instance.MassRangeLimitEnabled = LimitEnabled.IsChecked.GetValueOrDefault();
+            this.Close();
         }
     }
 }

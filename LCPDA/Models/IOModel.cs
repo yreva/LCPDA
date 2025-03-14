@@ -32,8 +32,8 @@ namespace RawVision.Models
             // Check to see if the specified RAW file exists
             if (!File.Exists(filePath))
             {
-                Console.WriteLine(@"The file doesn't exist in the specified location - " + filePath);
-
+                Console.WriteLine();
+                MessageBox.Show(@"The file doesn't exist in the specified location - " + filePath, "File Missing", MessageBoxButton.OK, MessageBoxImage.Error);
                 return 0;
             }
 
@@ -43,7 +43,7 @@ namespace RawVision.Models
             if (!rawFile.IsOpen)
             {
                 Console.WriteLine("Unable to access the RAW file using the RawFileReader class!");
-
+                MessageBox.Show("The file could not be opened - reason unknown.", "File Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return 0;
             }
 
@@ -51,7 +51,7 @@ namespace RawVision.Models
             if (rawFile.IsError)
             {
                 Console.WriteLine("Error opening ({0}) - {1}", rawFile.FileError, filePath);
-
+                MessageBox.Show(string.Format("Error opening ({0}) - {1}", filePath, rawFile.FileError), "File Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return 0;
             }
 
@@ -59,7 +59,7 @@ namespace RawVision.Models
             if (rawFile.InAcquisition)
             {
                 Console.WriteLine("RAW file still being acquired - " + filePath);
-
+                MessageBox.Show("Please wait until the file is done being acquired.", "File Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return 0;
             }
 
