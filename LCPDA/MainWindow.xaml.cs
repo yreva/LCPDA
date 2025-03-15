@@ -7,6 +7,8 @@ using RawVision.ViewModels;
 using ScottPlot;
 using ScottPlot.WPF;
 using ThermoFisher.CommonCore.Data.Business;
+using HorizontalAlignment = System.Windows.HorizontalAlignment;
+using VerticalAlignment = System.Windows.VerticalAlignment;
 
 namespace RawVision.Views
 {
@@ -22,8 +24,12 @@ namespace RawVision.Views
 
             this.PreviewKeyDown += MainWindow_PreviewKeyDown;
 
+            viewModel.ChromatogramPlot.Name = "ChromatogramPlot";
+            viewModel.SpectrumPlot.Name = "SpectrumPlot";
+
             ChromatogramContainer.Children.Add(viewModel.ChromatogramPlot);
             SpectrumContainer.Children.Add(viewModel.SpectrumPlot);
+            
             viewModel.ChromatogramPlot.PreviewKeyDown += WpfPlot_KeyDown;
             viewModel.SpectrumPlot.PreviewKeyDown += WpfPlot_KeyDown;
             viewModel.SpectrumViewModel.PropertyChanged += SpectrumViewModel_OnPropertyChanged;
@@ -173,6 +179,8 @@ namespace RawVision.Views
         public void About_Click(object sender, RoutedEventArgs e)
         {
             About aboutWindow = new About();
+            aboutWindow.Top = this.Top;
+            aboutWindow.Left = this.Left + this.Width;
             if (aboutWindow.ShowDialog() == true)
             {
                 //

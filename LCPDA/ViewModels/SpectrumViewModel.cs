@@ -5,6 +5,7 @@ using ThermoFisher.CommonCore.Data.Business;
 using ThermoFisher.CommonCore.Data.Interfaces;
 using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
+using System.Windows.Input;
 using RawVision.Views;
 
 
@@ -200,7 +201,6 @@ namespace RawVision.ViewModels
             double[,] intensityVsTime = new double[numRows, numScans];
             double[,] logIntensityVsTime = new double[numRows, numScans];
 
-
             // Step 3: Use a ConcurrentDictionary to store intensity data
             ConcurrentDictionary<int, double[]> intensityStorage = new ConcurrentDictionary<int, double[]>();
 
@@ -248,8 +248,6 @@ namespace RawVision.ViewModels
             }
 
             MessageBox.Show(Application.Current.MainWindow,"Processing Finished, File Loaded.", "Loading Complete", MessageBoxButton.OK, MessageBoxImage.Information);
-
-            
 
             return (uniqueMZ, intensityVsTime, logIntensityVsTime);
         }

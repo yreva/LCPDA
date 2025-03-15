@@ -7,7 +7,6 @@ using ScottPlot;
 using RawVision.Models;
 using RawVision.Views;
 
-
 namespace RawVision.ViewModels
 {
     /*------------------------------------------------------------------------------------------------------------
@@ -313,6 +312,7 @@ namespace RawVision.ViewModels
         public void LoadFilePressed()
         {
             //HandleLoadingPopup("Start");
+            Mouse.OverrideCursor = Cursors.Wait;
 
             if (SelectedFilePath == null)
             {
@@ -342,16 +342,19 @@ namespace RawVision.ViewModels
 
             _plotModel.PlotMassSpectrum();
 
+            Mouse.OverrideCursor = null;
             //HandleLoadingPopup("Stop");
         }
 
         public ICommand Command_ShowPeakList { get; }
         public void ShowPeakListPressed()
         {
+            Mouse.OverrideCursor = Cursors.Wait;
             PeakListWindow window = new PeakListWindow();
             double rt = Math.Round(ChromatogramViewModel.Times[PlotSettings.Instance.ScanNumber - 1],2);
             window.Header.Text = string.Format("Scan #{0}, at {1} min", PlotSettings.Instance.ScanNumber - 1, rt);
             window.dataGrid.ItemsSource = SpectrumViewModel.CreatePeakList(PlotSettings.Instance.ScanNumber - 1);
+            Mouse.OverrideCursor = null;
             window.Show();
         }
 

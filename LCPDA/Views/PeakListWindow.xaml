@@ -9,7 +9,7 @@
     <ScrollViewer>
         <StackPanel>
             <TextBlock Name="Header" Margin="5"/>
-            <DataGrid x:Name="dataGrid" AutoGenerateColumns="False" HeadersVisibility="Column" Margin="5">
+            <DataGrid x:Name="dataGrid" AutoGenerateColumns="False" HeadersVisibility="Column" Margin="5" IsReadOnly="True">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="Mass" Binding="{Binding Mass}" Width="*"/>
                     <DataGridTextColumn Header="Intensity" Binding="{Binding Intensity}" Width="*"/>

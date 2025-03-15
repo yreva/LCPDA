@@ -51,31 +51,24 @@ namespace RawVision.Views
             previous_XMax = PlotSettings.Instance.Chromatogram.XMax;
             previous_YMin = PlotSettings.Instance.Chromatogram.YMin;
             previous_YMax = PlotSettings.Instance.Chromatogram.YMax;
-            XMin.Text = Math.Round(previous_XMin,2).ToString();
-            YMin.Text = Math.Round(previous_YMin,2).ToString();
-            XMax.Text = Math.Round(previous_XMax,2).ToString();
-            YMax.Text = Math.Round(previous_YMax,2).ToString();
-
-            VLine.IsChecked = PlotSettings.Instance.Chromatogram.VLineEnabled;
-            PlotGrid.IsChecked = PlotSettings.Instance.Chromatogram.GridEnabled;
-            ScrollEnabled.IsChecked = PlotSettings.Instance.Chromatogram.MouseEventsEnabled;
-
             previous_Color = PlotSettings.Instance.Chromatogram.LineColor;
             previous_Vline = PlotSettings.Instance.Chromatogram.VLineEnabled;
             previous_PlotGrid = PlotSettings.Instance.Chromatogram.GridEnabled;
             previous_ScrollEnabled = PlotSettings.Instance.Chromatogram.MouseEventsEnabled;
+            previous_ColorMin = PlotSettings.Instance.Chromatogram.ColorMin;
+            previous_ColorMax = PlotSettings.Instance.Chromatogram.ColorMax;
 
-            if (!double.IsNaN(PlotSettings.Instance.Chromatogram.ColorMin))
-            {
-                ColorMin.Text = PlotSettings.Instance.Chromatogram.ColorMin.ToString();
-                previous_ColorMin = PlotSettings.Instance.Chromatogram.ColorMin;
-            }
-            if (!double.IsNaN(PlotSettings.Instance.Chromatogram.ColorMax))
-            {
-                ColorMax.Text = PlotSettings.Instance.Chromatogram.ColorMax.ToString();
-                previous_ColorMax = PlotSettings.Instance.Chromatogram.ColorMax;
 
-            }
+            XMin.Text = Math.Round(previous_XMin,2).ToString();
+            YMin.Text = Math.Round(previous_YMin,2).ToString();
+            XMax.Text = Math.Round(previous_XMax,2).ToString();
+            YMax.Text = Math.Round(previous_YMax,2).ToString();
+            ColorComboBox.SelectedItem = PlotSettings.Instance.Chromatogram.LineColor;
+            VLine.IsChecked = PlotSettings.Instance.Chromatogram.VLineEnabled;
+            PlotGrid.IsChecked = PlotSettings.Instance.Chromatogram.GridEnabled;
+            ScrollEnabled.IsChecked = PlotSettings.Instance.Chromatogram.MouseEventsEnabled;
+            ColorMax.Text = PlotSettings.Instance.Chromatogram.ColorMax.ToString() == "NaN" ? "" : PlotSettings.Instance.Chromatogram.ColorMax.ToString();
+            ColorMin.Text = PlotSettings.Instance.Chromatogram.ColorMin.ToString() == "NaN" ? "" : PlotSettings.Instance.Chromatogram.ColorMin.ToString();
         }
 
         private void OnClick_SaveSettings(object sender, RoutedEventArgs e)
@@ -85,7 +78,6 @@ namespace RawVision.Views
 
         private void OnClick_CloseNoSave(object sender, RoutedEventArgs e)
         {
-
             PlotSettings.Instance.Chromatogram.AutoScaleX = previous_AutoX;
             PlotSettings.Instance.Chromatogram.AutoScaleY = previous_AutoY;
             PlotSettings.Instance.Chromatogram.XMin = previous_XMin;
@@ -105,16 +97,16 @@ namespace RawVision.Views
         private void OnClick_AutoX(object sender, RoutedEventArgs e)
         {
             PlotSettings.Instance.Chromatogram.AutoScaleX += 1;
-            XMin.Text = Math.Round(previous_XMin, 2).ToString();
-            XMax.Text = Math.Round(previous_XMax, 2).ToString();
+            XMin.Text = Math.Round(PlotSettings.Instance.Chromatogram.XMin, 2).ToString();
+            XMax.Text = Math.Round(PlotSettings.Instance.Chromatogram.XMax, 2).ToString();
 
         }
 
         private void OnClick_AutoY(object sender, RoutedEventArgs e)
         {
             PlotSettings.Instance.Chromatogram.AutoScaleY += 1;
-            YMin.Text = Math.Round(previous_YMin, 2).ToString();
-            YMax.Text = Math.Round(previous_YMax, 2).ToString();
+            YMin.Text = Math.Round(PlotSettings.Instance.Chromatogram.YMin, 2).ToString();
+            YMax.Text = Math.Round(PlotSettings.Instance.Chromatogram.YMax, 2).ToString();
         }
 
         private void OnChecked_ShowVLine(object sender, RoutedEventArgs e)

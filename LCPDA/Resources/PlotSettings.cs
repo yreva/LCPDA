@@ -5,6 +5,7 @@ using System.DirectoryServices.ActiveDirectory;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Input;
 using RawVision.Views;
 using ScottPlot;
@@ -182,6 +183,7 @@ namespace RawVision
             set => SetProperty(ref _vLineEnabled, value, nameof(VLineEnabled));
         }
 
+
         private int _autoScaleX;
         public int AutoScaleX
         {
@@ -234,15 +236,21 @@ namespace RawVision
             YMin = 0;
             XMax = 0;
             YMax = 0;
-            AutoScaleX = true;
-            AutoScaleY = true;
+            AutoScaleX = 0;
+            AutoScaleY = 0;
+            BarColor = ScottPlot.Color.FromSDColor(Color.MidnightBlue);
+            MouseEventsEnabled = true;
+            GridEnabled = true;
+            HoldManualLimits = false;
         }
-
 
         private double _xMin;
         private double _xMax;
         private double _yMin;
         private double _yMax;
+        private bool _mouseEventsEnabled;
+        private bool _gridEnabled;
+        private bool _holdManualLimits;
 
         public double XMin
         {
@@ -268,19 +276,45 @@ namespace RawVision
             set => SetProperty(ref _yMax, value, nameof(YMax));
         }
 
-        private bool _autoScaleX;
-        public bool AutoScaleX
+        private int _autoScaleX;
+        public int AutoScaleX
         {
             get => _autoScaleX;
             set => SetProperty(ref _autoScaleX, value, nameof(AutoScaleX));
         }
 
 
-        private bool _autoScaleY;
-        public bool AutoScaleY
+        private int _autoScaleY;
+        public int AutoScaleY
         {
             get => _autoScaleY;
             set => SetProperty(ref _autoScaleY, value, nameof(AutoScaleY));
+        }
+
+        public bool MouseEventsEnabled
+        {
+            get => _mouseEventsEnabled;
+            set => SetProperty(ref _mouseEventsEnabled, value, nameof(MouseEventsEnabled));
+        }
+
+        public bool GridEnabled
+        {
+            get => _gridEnabled;
+            set => SetProperty(ref _gridEnabled, value, nameof(GridEnabled));
+        }
+
+        
+        public bool HoldManualLimits
+        {
+            get => _holdManualLimits;
+            set => SetProperty(ref _holdManualLimits, value, nameof(HoldManualLimits));
+        }
+
+        private ScottPlot.Color _barColor;
+        public ScottPlot.Color BarColor
+        {
+            get { return _barColor; }
+            set => SetProperty(ref _barColor, value, nameof(BarColor));
         }
     }
 
