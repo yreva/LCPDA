@@ -1,12 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0-windows7.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <UseWPF>true</UseWPF>
-    <ApplicationIcon>rawvision_icon.ico</ApplicationIcon>
+	  <OutputType>WinExe</OutputType>
+	  <TargetFramework>net8.0-windows</TargetFramework>
+	  <Nullable>enable</Nullable>
+	  <ImplicitUsings>enable</ImplicitUsings>
+	  <UseWPF>true</UseWPF>
+	  <ApplicationIcon>rawvision_icon.ico</ApplicationIcon>
+	  <AssemblyName>RawVisionMS</AssemblyName>
+	  <BaseOutputPath>..\RawVisionBuild</BaseOutputPath>
+	  <RestorePackagesPath>..\RawVisionBuild\SharedPackages</RestorePackagesPath>
   </PropertyGroup>
 
 <ItemGroup>
