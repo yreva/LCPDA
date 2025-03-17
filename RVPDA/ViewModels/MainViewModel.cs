@@ -72,6 +72,7 @@ namespace RVPDA.ViewModels
             LoadFileCommand = new RelayCommand(LoadFilePressed);
             SaveDataCommand = new RelayCommand(SaveDataPressed);
             Command_ShowPeakList = new RelayCommand(ShowPeakListPressed);
+            Command_ImportSpectrum = new RelayCommand(ImportSpectrumPressed);
 
             // Initialize the ViewModels for both plots
             ChromatogramViewModel = new ChromatogramViewModel();
@@ -81,6 +82,7 @@ namespace RVPDA.ViewModels
             _plotModel.PropertyChanged += PropertyChanged;
 
             PlotSettings.Instance.PropertyChanged += PlotSettings_PropertyChanged;
+            PlotSettings.Instance.Spectrum.ResetImportedSpectrum();
         }
 
 
@@ -339,7 +341,7 @@ namespace RVPDA.ViewModels
                     break;
             }
 
-            _plotModel.PlotMassSpectrum();
+            _plotModel.PlotSpectrum();
 
             Mouse.OverrideCursor = null;
             //HandleLoadingPopup("Stop");
@@ -348,6 +350,11 @@ namespace RVPDA.ViewModels
         public ICommand Command_ShowPeakList { get; }
         public void ShowPeakListPressed()
         {
+            if (ChromatogramViewModel.Times == null)
+            {
+                MessageBox.Show("No data to display!","No Spectra",MessageBoxButton.OK,MessageBoxImage.Error);
+                return;
+            }
             Mouse.OverrideCursor = Cursors.Wait;
             PeakListWindow window = new PeakListWindow();
             double rt = Math.Round(ChromatogramViewModel.Times[PlotSettings.Instance.ScanNumber - 1],2);
@@ -355,6 +362,32 @@ namespace RVPDA.ViewModels
             window.dataGrid.ItemsSource = SpectrumViewModel.CreatePeakList(PlotSettings.Instance.ScanNumber - 1);
             Mouse.OverrideCursor = null;
             window.Show();
+        }
+
+        public ICommand Command_ImportSpectrum { get; }
+        public void ImportSpectrumPressed()
+        {
+            OpenFileDialog openFileDialog = new OpenFileDialog
+            {
+                Title = "Select a File",
+                Filter = "CSV Files|*.csv;*.CSV",
+                Multiselect = false
+            };
+            if (openFileDialog.ShowDialog() == true)
+            {
+                string filePath = openFileDialog.FileName;
+                //MessageBox.Show($"Selected file: {filePath}");
+                (double[] x, double[] y) = IOModel.LoadCsvColumns(filePath);
+                _spectrumViewModel.AddImportedSpectrum(x,y);
+                _plotModel.PlotImportedSpectrum(filePath);
+                PlotSettings.Instance.Spectrum.SetImportedSpectrumPath(filePath);
+            }
+
+            var window = Application.Current.Windows.OfType<SpectrumOptionsView>().FirstOrDefault();
+            if (window != null)
+            {
+                window.UpdateLayout();
+            }
         }
 
 

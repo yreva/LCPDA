@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:RVPDA.Views"
         mc:Ignorable="d"
-        Title="Plot Options" Height="430" Width="257" ResizeMode="CanMinimize">
+        Title="Plot Options" Height="368" Width="257" ResizeMode="CanMinimize">
     <ScrollViewer>
         <StackPanel>
 
@@ -100,10 +100,10 @@
             <CheckBox Name="PlotGrid" Content="Show Grid in Plot" Margin="5 0 0 2"  Click="OnChecked_ShowGrid"/>
             <CheckBox Name="ScrollEnabled" Content="Allow Mouse to Edit Axes" Margin="5 0 0 0" Click="OnChecked_MouseEvents"/>
 
-            <Rectangle Margin="5" Fill="LightGray" Height="3"></Rectangle>
+            <Rectangle Margin="5" Fill="LightGray" Height="3"/>
 
-            <TextBlock Text="Line Color" HorizontalAlignment="Center" Margin="5 0 5 2"></TextBlock>
-            <ComboBox x:Name="ColorComboBox" SelectionChanged="ColorComboBox_SelectionChanged" Width="150" Height="25">
+            <TextBlock Text="Raw Data Line Color" HorizontalAlignment="Center" Margin="5 0 5 2"></TextBlock>
+            <ComboBox x:Name="LineColorComboBox" SelectionChanged="ColorComboBox_SelectionChanged" Width="150" Height="25" Margin="0 0 0 5">
                 <ComboBox.ItemTemplate>
                     <DataTemplate>
                         <StackPanel Orientation="Horizontal">
@@ -114,7 +114,25 @@
                 </ComboBox.ItemTemplate>
             </ComboBox>
 
-            <Rectangle Margin="5" Fill="LightGray" Height="3"></Rectangle>
+            <!-- Imported Spectrum Options -->
+            <Rectangle Name="ImportedDivider" Margin="5 5" Fill="LightGray" Height="3" Visibility="Collapsed"/>
+            <CheckBox Name="ImportedCheckBox" Content="Show Imported Spectrum" Margin="5 5 0 10" Click="OnClick_ShowImportedSpectrum" Visibility="Collapsed" HorizontalAlignment="Center"/>
+            <TextBlock Name="ImportedHeader" Text="Imported Spectrum Color" HorizontalAlignment="Center" Margin="5 0 5 2" Visibility="Collapsed"/>
+            <ComboBox Name="ImportedComboBox" SelectionChanged="ColorComboBox_SelectionChanged" Width="150" Height="25" Visibility="Collapsed" Margin="0 0 0 5">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal">
+                            <Rectangle Width="16" Height="16" Fill="{Binding Converter={StaticResource ColorConverter}}" Margin="5 0"/>
+                            <TextBlock Text="{Binding}" Margin="5 0"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+            <TextBlock Name="ImportedScalerHeader" Text="Scroll to Scale Imported Data" HorizontalAlignment="Center" Margin="5 0 5 0" Visibility="Collapsed"/>
+            <TextBox Name="ImportedScaler" Text="1.00" Margin="5 0 5 5" Width="100" TextAlignment="Center"  PreviewKeyDown="ImportedScaler_PreviewKeyDown" PreviewMouseWheel="ImportedScaler_PreviewMouseWheel" Visibility="Collapsed"/>
+
+            <!-- Save and close -->
+            <Rectangle Margin="5 0 5 5" Fill="LightGray" Height="3"></Rectangle>
 
             <Button Content="Save Settings" Click="OnClick_SaveSettings" Margin="15 5 15 5" VerticalAlignment="Bottom"/>
             <Button Content="Close Without Saving" Click="OnClick_CloseNoSave" Margin="15 0 15 5" VerticalAlignment="Bottom"/>

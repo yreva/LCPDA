@@ -4,7 +4,6 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:RVPDA"
-        xmlns:sp="clr-namespace:ScottPlot.WPF;assembly=ScottPlot.WPF"
         mc:Ignorable="d"
         Title="RawVision - PDA Edition" Height="767" Width="950"
         KeyboardNavigation.DirectionalNavigation="None"
@@ -27,6 +26,7 @@
             <MenuItem Header="_Settings">
                 <MenuItem Header="Map Scaling" Click="ChangeMapScaling"/>
                 <MenuItem Header="Colormap" Click="ChangeColormap"/>
+                <MenuItem Header="Limit Wavelength Range" Click="ChangeWavelengthRange"/>
             </MenuItem>
             <MenuItem Header="_Help">
                 <MenuItem Header="About" Click="About_Click"/>
@@ -118,7 +118,9 @@
                             <TextBlock Text=""/>
 
                             <!-- Ninth row -->
-                            <Button Content="Show Peak List" Margin="5" Command="{Binding Command_ShowPeakList}"/>
+                            <Button Content="Show Spectrum Table" Margin="5" Command="{Binding Command_ShowPeakList}"/>
+                            <Button Content="Import Spectrum" Margin="5 0" Command="{Binding Command_ImportSpectrum}"/>
+
 
                             <TextBlock Text=""/>
 
@@ -134,11 +136,9 @@
                                         <RowDefinition Height="Auto"/>
                                     </Grid.RowDefinitions>
                                     <TextBlock Grid.Row="0" Grid.Column="0" Margin="5 0" Text="Scan Filter:"/>
-                                    <TextBlock Grid.Row="1" Grid.Column="0" Margin="5 0" Text="Scan Polarity:"/>
-                                    <TextBlock Grid.Row="2" Grid.Column="0" Margin="5 0" Text="Scan Count:"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="0" Margin="5 0" Text="Scan Count:"/>
                                     <TextBlock Grid.Row="0" Grid.Column="1" Margin="5 0" Name="Info_ScanFilter" Text="PDA"/>
-                                    <TextBlock Grid.Row="1" Grid.Column="1" Margin="5 0" Name="Info_Polarity"/>
-                                    <TextBlock Grid.Row="2" Grid.Column="1" Margin="5 0" Name="Info_NumberOfScans"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="1" Margin="5 0" Name="Info_NumberOfScans"/>
                                 </Grid>
                             </GroupBox>
                         </StackPanel>
@@ -148,8 +148,24 @@
 
             <!-- Bottom Frame -->
             <StackPanel Orientation="Horizontal" Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="10">
-                <Button x:Name="SaveSpectrumButton" Content="Save Spectrum Figure" Width="150" FontSize="12" IsEnabled="False"/>
-                <Button x:Name="SaveChromatogramButton" Content="Save Chromatogram Figure" Width="200" FontSize="12" Margin="5 0 5 0" IsEnabled="False"/>
+                    <Button x:Name="SaveSpectrumButton" Content="Save Spectrum Figure" Width="150" FontSize="12" IsEnabled="False" ToolTipService.ShowOnDisabled="True">
+                    <Button.ToolTip>
+                        <ToolTip Background="LightYellow" Foreground="Black">
+                            <StackPanel>
+                                <TextBlock Text="To save a figure, right-click on the plot." FontWeight="Bold"/>
+                            </StackPanel>
+                        </ToolTip>
+                    </Button.ToolTip>
+                </Button>
+                    <Button x:Name="SaveChromatogramButton" Content="Save Chromatogram Figure" Width="200" FontSize="12" Margin="5 0 5 0" IsEnabled="False" ToolTipService.ShowOnDisabled="True">
+                    <Button.ToolTip>
+                        <ToolTip Background="LightYellow" Foreground="Black">
+                            <StackPanel>
+                                <TextBlock Text="To save a figure, right-click on the plot." FontWeight="Bold"/>
+                            </StackPanel>
+                        </ToolTip>
+                    </Button.ToolTip>
+                </Button>
                 <Button x:Name="SaveDataButton" Content="Save All Data as Text" Width="200" FontSize="12" Command="{Binding SaveDataCommand}"/>
             </StackPanel>
         </Grid>

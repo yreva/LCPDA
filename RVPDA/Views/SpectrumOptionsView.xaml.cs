@@ -31,6 +31,7 @@ namespace RVPDA.Views
         private bool previous_HoldManual;
         private bool previous_PlotGrid;
         private bool previous_ScrollEnabled;
+        private bool previous_ShowImportedSpectrum;
 
         private ScottPlot.Color previous_Color;
 
@@ -47,16 +48,62 @@ namespace RVPDA.Views
             previous_HoldManual = PlotSettings.Instance.Spectrum.HoldManualLimits;
             previous_PlotGrid = PlotSettings.Instance.Spectrum.GridEnabled;
             previous_ScrollEnabled = PlotSettings.Instance.Spectrum.MouseEventsEnabled;
+            previous_ShowImportedSpectrum = PlotSettings.Instance.Spectrum.ShowImportedSpectrum;
 
 
-            XMin.Text = Math.Round(previous_XMin, 2).ToString();
-            YMin.Text = Math.Round(previous_YMin, 2).ToString();
-            XMax.Text = Math.Round(previous_XMax, 2).ToString();
-            YMax.Text = Math.Round(previous_YMax, 2).ToString();
+            XMin.Text = Math.Round(previous_XMin,1).ToString();
+            YMin.Text = Math.Round(previous_YMin,2).ToString();
+            XMax.Text = Math.Round(previous_XMax,1).ToString();
+            YMax.Text = Math.Round(previous_YMax,2).ToString();
             PlotGrid.IsChecked = PlotSettings.Instance.Spectrum.GridEnabled;
             ScrollEnabled.IsChecked = PlotSettings.Instance.Spectrum.MouseEventsEnabled;
             HoldLimits.IsChecked = PlotSettings.Instance.Spectrum.HoldManualLimits;
-            ColorComboBox.SelectedItem = PlotSettings.Instance.Spectrum.LineColor;
+
+            if (!PlotSettings.Instance.Spectrum.HasSpectrumBeenImported())
+            {
+                return;
+            }
+
+            this.Height = 390;
+            ImportedDivider.Visibility = Visibility.Visible;
+            ImportedCheckBox.Visibility = Visibility.Visible;
+            ImportedCheckBox.IsChecked = PlotSettings.Instance.Spectrum.ShowImportedSpectrum;
+
+            if (PlotSettings.Instance.Spectrum.ShowImportedSpectrum)
+            {
+                this.Height = 500;
+                ImportedDivider.Visibility = Visibility.Visible;
+                ImportedHeader.Visibility = Visibility.Visible;
+                ImportedComboBox.Visibility = Visibility.Visible;
+                ImportedScalerHeader.Visibility = Visibility.Visible;
+                ImportedScaler.Visibility = Visibility.Visible;
+            }
+        }
+
+        public void UpdateLayout()
+        {
+            if (!PlotSettings.Instance.Spectrum.HasSpectrumBeenImported())
+            {
+                return;
+            }
+
+            this.Height = 390;
+            ImportedDivider.Visibility = Visibility.Visible;
+            ImportedCheckBox.Visibility = Visibility.Visible;
+            ImportedCheckBox.IsChecked = PlotSettings.Instance.Spectrum.ShowImportedSpectrum;
+
+            if (PlotSettings.Instance.Spectrum.ShowImportedSpectrum)
+            {
+                this.Height = 500;
+                ImportedDivider.Visibility = Visibility.Visible;
+                ImportedHeader.Visibility = Visibility.Visible;
+                ImportedComboBox.Visibility = Visibility.Visible;
+                ImportedScalerHeader.Visibility = Visibility.Visible;
+                ImportedScaler.Visibility = Visibility.Visible;
+            }
+
+            this.Top = Application.Current.MainWindow.Top + Application.Current.MainWindow.Height - this.Height;
+            this.Left = Application.Current.MainWindow.Left + Application.Current.MainWindow.Width;
         }
 
         private void OnClick_SaveSettings(object sender, RoutedEventArgs e)
@@ -93,8 +140,8 @@ namespace RVPDA.Views
         private void OnClick_AutoY(object sender, RoutedEventArgs e)
         {
             PlotSettings.Instance.Chromatogram.AutoScaleY += 1;
-            XMin.Text = Math.Round(PlotSettings.Instance.Spectrum.YMin, 2).ToString();
-            XMax.Text = Math.Round(PlotSettings.Instance.Spectrum.YMax, 2).ToString();
+            YMin.Text = Math.Round(PlotSettings.Instance.Spectrum.YMin, 2).ToString();
+            YMax.Text = Math.Round(PlotSettings.Instance.Spectrum.YMax, 2).ToString();
         }
 
 
@@ -126,6 +173,52 @@ namespace RVPDA.Views
             {
                 PlotSettings.Instance.Spectrum.HoldManualLimits = false;
             }
+        }
+
+        private void OnClick_ShowImportedSpectrum(object sender, RoutedEventArgs e)
+        {
+            if ((sender as CheckBox).IsChecked == true)
+            {
+                this.Height = 485;
+                PlotSettings.Instance.Spectrum.ShowImportedSpectrum = true; 
+                ImportedDivider.Visibility = Visibility.Visible;
+                ImportedCheckBox.Visibility = Visibility.Visible;
+                ImportedHeader.Visibility = Visibility.Visible;
+                ImportedComboBox.Visibility = Visibility.Visible;
+                ImportedScalerHeader.Visibility = Visibility.Visible;
+                ImportedScaler.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                this.Height = 415;
+                PlotSettings.Instance.Spectrum.ShowImportedSpectrum = false;
+                ImportedCheckBox.Visibility = Visibility.Visible;
+                ImportedHeader.Visibility = Visibility.Collapsed;
+                ImportedComboBox.Visibility = Visibility.Collapsed;
+                ImportedScalerHeader.Visibility = Visibility.Collapsed;
+                ImportedScaler.Visibility = Visibility.Collapsed;
+
+            }
+        }
+
+        private void ImportedScaler_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            double increment = 0.1;  // Adjust increment as needed
+            double.TryParse(ImportedScaler.Text, out double value);
+            double newValue = value + (e.Delta > 0 ? increment : -increment);
+
+            if (newValue <= 0.1)
+            {
+                newValue = 0.1;
+            }
+
+            ImportedScaler.Text = newValue.ToString("0.00");
+            PlotSettings.Instance.Spectrum.ImportedSpectrumScaler = newValue;
+        }
+
+        private void ImportedScaler_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            e.Handled = true;
         }
 
         private void EntryBox_KeyDown(object sender, KeyEventArgs e)
@@ -174,18 +267,26 @@ namespace RVPDA.Views
                 .Cast<System.Drawing.Color>()
                 .ToList();
 
-            var x = (ColorComboBox as ComboBox);
-            var y = PlotSettings.Instance.Spectrum.LineColor.ToSDColor();
+            var x = PlotSettings.Instance.Spectrum.LineColor.ToSDColor();
+            var y = PlotSettings.Instance.Spectrum.ImportedLineColor.ToSDColor();
 
-            ColorComboBox.ItemsSource = colors;
-            ColorComboBox.SelectedItem = colors.First(c => c.ToArgb() == y.ToArgb());
+            LineColorComboBox.ItemsSource = colors;
+            LineColorComboBox.SelectedItem = colors.First(c => c.ToArgb() == x.ToArgb());
+
+            ImportedComboBox.ItemsSource = colors;
+            ImportedComboBox.SelectedItem = colors.First(c => c.ToArgb() == y.ToArgb());
         }
 
         private void ColorComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
-            if (ColorComboBox.SelectedItem is System.Drawing.Color selectedColor)
+            switch ((sender as ComboBox).Name)
             {
-                PlotSettings.Instance.Spectrum.LineColor = ScottPlot.Color.FromSDColor(selectedColor);
+                case "ImportedLineColor":
+                    PlotSettings.Instance.Spectrum.ImportedLineColor = ScottPlot.Color.FromSDColor((System.Drawing.Color)ImportedComboBox.SelectedItem);
+                    break;
+                case "RawDataLineColor":
+                    PlotSettings.Instance.Spectrum.LineColor = ScottPlot.Color.FromSDColor((System.Drawing.Color)LineColorComboBox.SelectedItem);
+                    break;
             }
         }
 

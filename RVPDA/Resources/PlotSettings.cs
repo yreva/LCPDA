@@ -36,9 +36,9 @@ namespace RVPDA
         private PlotSettings()
         {
             ScanNumber = 1;
-            MassRangeMinimum = 0;
-            MassRangeMaximum = 0;
-            MassRangeLimitEnabled = false;
+            WavelengthRangeMinimum = 0;
+            WavelengthRangeMaximum = 0;
+            WavelengthRangeLimitEnabled = false;
 
             Chromatogram = new ChromatogramSettings();
             Spectrum = new SpectrumSettings();
@@ -61,36 +61,36 @@ namespace RVPDA
             }
         }
 
-        private bool _massRangeLimitEnabled;
-        public bool MassRangeLimitEnabled
+        private bool _wavelengthRangeLimitEnabled;
+        public bool WavelengthRangeLimitEnabled
         {
-            get { return _massRangeLimitEnabled; }
+            get { return _wavelengthRangeLimitEnabled; }
             set
             {
-                _massRangeLimitEnabled = value;
-                OnPropertyChanged(nameof(MassRangeLimitEnabled));
+                _wavelengthRangeLimitEnabled = value;
+                OnPropertyChanged(nameof(WavelengthRangeLimitEnabled));
             }
         }
 
-        private double _massRangeMinimum;
-        public double MassRangeMinimum
+        private double _wavelengthRangeMinimum;
+        public double WavelengthRangeMinimum
         {
-            get { return _massRangeMinimum; }
+            get { return _wavelengthRangeMinimum; }
             set
             {
-                _massRangeMinimum = value;
-                OnPropertyChanged(nameof(MassRangeMinimum));
+                _wavelengthRangeMinimum = value;
+                OnPropertyChanged(nameof(WavelengthRangeMinimum));
             }
         }
 
-        private double _massRangeMaximum;
-        public double MassRangeMaximum
+        private double _wavelengthRangeMaximum;
+        public double WavelengthRangeMaximum
         {
-            get { return _massRangeMaximum; }
+            get { return _wavelengthRangeMaximum; }
             set
             {
-                _massRangeMaximum = value;
-                OnPropertyChanged(nameof(MassRangeMaximum));
+                _wavelengthRangeMaximum = value;
+                OnPropertyChanged(nameof(WavelengthRangeMaximum));
             }
         }
 
@@ -239,9 +239,13 @@ namespace RVPDA
             AutoScaleX = 0;
             AutoScaleY = 0;
             LineColor = ScottPlot.Color.FromSDColor(Color.MidnightBlue);
+            ImportedLineColor = ScottPlot.Color.FromSDColor(Color.HotPink);
             MouseEventsEnabled = true;
             GridEnabled = true;
             HoldManualLimits = false;
+            _hasSpectrumBeenImported = false;
+            _showImportedSpectrum = true;
+            _importedSpectrumScaler = 1.0;
         }
 
         private double _xMin;
@@ -251,6 +255,10 @@ namespace RVPDA
         private bool _mouseEventsEnabled;
         private bool _gridEnabled;
         private bool _holdManualLimits;
+        private bool _showImportedSpectrum;
+        private bool _hasSpectrumBeenImported;
+        private double _importedSpectrumScaler;
+        private string _importedSpectrumPath;
 
         public double XMin
         {
@@ -276,7 +284,14 @@ namespace RVPDA
             set => SetProperty(ref _yMax, value, nameof(YMax));
         }
 
+        public double ImportedSpectrumScaler
+        {
+            get => _importedSpectrumScaler;
+            set => SetProperty(ref _importedSpectrumScaler, value, nameof(ImportedSpectrumScaler));
+        }
+
         private int _autoScaleX;
+
         public int AutoScaleX
         {
             get => _autoScaleX;
@@ -285,6 +300,7 @@ namespace RVPDA
 
 
         private int _autoScaleY;
+
         public int AutoScaleY
         {
             get => _autoScaleY;
@@ -303,7 +319,7 @@ namespace RVPDA
             set => SetProperty(ref _gridEnabled, value, nameof(GridEnabled));
         }
 
-        
+
         public bool HoldManualLimits
         {
             get => _holdManualLimits;
@@ -311,11 +327,50 @@ namespace RVPDA
         }
 
         private ScottPlot.Color _lineColor;
+
         public ScottPlot.Color LineColor
         {
             get { return _lineColor; }
             set => SetProperty(ref _lineColor, value, nameof(LineColor));
         }
+
+        private ScottPlot.Color _importedLineColor;
+
+        public ScottPlot.Color ImportedLineColor
+        {
+            get { return _importedLineColor; }
+            set => SetProperty(ref _importedLineColor, value, nameof(ImportedLineColor));
+        }
+
+        public bool ShowImportedSpectrum
+        {
+            get => _showImportedSpectrum;
+            set => SetProperty(ref _showImportedSpectrum, value, nameof(ShowImportedSpectrum));
+        }
+
+        public bool HasSpectrumBeenImported()
+        {
+            return _hasSpectrumBeenImported;
+        }
+
+        public void ResetImportedSpectrum()
+        {
+            _hasSpectrumBeenImported = false;
+            ShowImportedSpectrum = true;
+        }
+
+        public string GetImportedSpectrumPath()
+        {
+            return _importedSpectrumPath;
+        }
+
+        public void SetImportedSpectrumPath(string path)
+        {
+            _importedSpectrumPath = path;
+            _hasSpectrumBeenImported = true;
+        }
+
+
     }
 
     public class BaseSettings : INotifyPropertyChanged

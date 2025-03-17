@@ -72,7 +72,7 @@
     <Compile Update="Views\ColormapSettingsDialogue.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="Views\LimitMassRangeView.xaml.cs">
+    <Compile Update="Views\LimitWavelengthRangeView.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Update="Views\PeakListWindow.xaml.cs">

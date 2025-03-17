@@ -149,6 +149,44 @@ namespace RVPDA.Models
             return _rawFile;
         }
 
+        public static (double[], double[]) LoadCsvColumns(string filePath)
+        {
+            // 1) Check if file exists
+            if (!File.Exists(filePath))
+                throw new FileNotFoundException("CSV file not found.");
+
+            var lines = File.ReadAllLines(filePath);
+            if (lines.Length == 0)
+                throw new InvalidDataException("CSV file is empty.");
+
+            // Determine if there's a header
+            bool hasHeader = lines[0].Split(',').All(x => !double.TryParse(x, out _));
+            var dataLines = hasHeader ? lines.Skip(1) : lines;
+
+            // Read the CSV data
+            var parsedData = dataLines
+                .Select(line => line.Split(','))
+                .ToList();
+
+            // 2) Ensure exactly 2 columns
+            if (parsedData.Any(columns => columns.Length != 2))
+                throw new InvalidDataException("CSV file must have exactly 2 columns.");
+
+            // 3) Ensure all values are integers
+            if (!parsedData.All(columns => double.TryParse(columns[0], out _) && double.TryParse(columns[1], out _)))
+                throw new InvalidDataException("All non-header values must be integers.");
+
+            // 4) Extract and convert data
+            double[] column1 = parsedData.Select(columns => double.Parse(columns[0])).ToArray();
+            double[] column2 = parsedData.Select(columns => double.Parse(columns[1])).ToArray();
+
+            // 5) Ensure both columns have the same length
+            if (column1.Length != column2.Length)
+                throw new InvalidDataException("Columns must have the same number of values.");
+
+            return (column1, column2);
+        }
+
         public void WriteDataToCsv(double[] masses, double[] times, double[,] intensity)
         {
             if (masses == null)

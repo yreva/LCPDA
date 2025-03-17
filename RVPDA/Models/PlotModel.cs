@@ -10,6 +10,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Xml.Linq;
 using Microsoft.VisualBasic;
+using OpenTK.Windowing.GraphicsLibraryFramework;
 using RVPDA.ViewModels;
 using RVPDA.Views;
 using ScottPlot;
@@ -48,11 +49,13 @@ namespace RVPDA.Models
             {
                 case "ScanNumber":
                     CheckValidScanNumber();
-                    PlotMassSpectrum();
+                    PlotSpectrum();
+                    PlotSpectrumNewScanNumber();
                     ResetVlineOnChomatogram();
                     break;
 
-                case "MassRangeLimitEnabled":
+                case "WavelengthRangeLimitEnabled":
+                    _spectrumViewModel.TrimDataToWavelengthRange();
                     break;
 
             }
@@ -141,6 +144,14 @@ namespace RVPDA.Models
                 case "HoldManualLimits":
                     SetSpectrumManualLimits("X");
                     SetSpectrumManualLimits("Y");
+                    break;
+
+                case "ShowImportedSpectrum":
+                    ImportedSpectrumVisibilityChanged();
+                    break;
+
+                case "ImportedSpectrumScaler":
+                    PlotImportedSpectrum(PlotSettings.Instance.Spectrum.GetImportedSpectrumPath());
                     break;
 
             }
@@ -240,8 +251,8 @@ namespace RVPDA.Models
             {
                 if (_hasMouseBeenDisabled)
                 {
-                    _chromatogramPlot.PreviewMouseWheel -= _chromatogramPlot_PreviewMouseWheel;
-                    _chromatogramPlot.PreviewMouseDown -= _chromatogramPlot_PreviewMouseDown;
+                    _chromatogramPlot.PreviewMouseWheel -= Plot_PreviewMouseWheel;
+                    _chromatogramPlot.PreviewMouseDown -= Plot_PreviewMouseDown;
                     _hasMouseBeenDisabled = false;
                     return;
                 }
@@ -249,8 +260,8 @@ namespace RVPDA.Models
             else
             {
                 _hasMouseBeenDisabled = true;
-                _chromatogramPlot.PreviewMouseWheel += _chromatogramPlot_PreviewMouseWheel;
-                _chromatogramPlot.PreviewMouseDown += _chromatogramPlot_PreviewMouseDown;
+                _chromatogramPlot.PreviewMouseWheel += Plot_PreviewMouseWheel;
+                _chromatogramPlot.PreviewMouseDown += Plot_PreviewMouseDown;
             }
         }
 
@@ -261,8 +272,8 @@ namespace RVPDA.Models
             {
                 if (_hasMouseBeenDisabled)
                 {
-                    _spectrumPlot.PreviewMouseWheel -= _chromatogramPlot_PreviewMouseWheel;
-                    _spectrumPlot.PreviewMouseDown -= _chromatogramPlot_PreviewMouseDown;
+                    _spectrumPlot.PreviewMouseWheel -= Plot_PreviewMouseWheel;
+                    _spectrumPlot.PreviewMouseDown -= Plot_PreviewMouseDown;
                     _hasMouseBeenDisabledForSpectrum = false;
                     return;
                 }
@@ -270,8 +281,8 @@ namespace RVPDA.Models
             else
             {
                 _hasMouseBeenDisabledForSpectrum = true;
-                _spectrumPlot.PreviewMouseWheel += _chromatogramPlot_PreviewMouseWheel;
-                _spectrumPlot.PreviewMouseDown += _chromatogramPlot_PreviewMouseDown;
+                _spectrumPlot.PreviewMouseWheel += Plot_PreviewMouseWheel;
+                _spectrumPlot.PreviewMouseDown += Plot_PreviewMouseDown;
             }
         }
 
@@ -439,16 +450,21 @@ namespace RVPDA.Models
 
             _chromatogramPlot.Refresh();
         }
-        public void PlotMassSpectrum()
+        public void PlotSpectrum()
         {
             if (_spectrumViewModel.Wavelengths.Count() == 0)
             {
                 return;
             }
 
-            var plt = _spectrumPlot.Plot;
+            var plot = _spectrumPlot.Plot.GetPlottables()
+                .OfType<Scatter>() // Filters and casts only Scatter plots
+                .FirstOrDefault(plot => plot.LegendText == "RawData");
 
-            plt.Clear();
+            if (plot != null)
+            {
+                _spectrumPlot.Plot.Remove(plot);
+            }
 
             var idx = PlotSettings.Instance.ScanNumber;
 
@@ -459,26 +475,73 @@ namespace RVPDA.Models
             x = _spectrumViewModel.Wavelengths;
             y = _spectrumViewModel.IntensityList[PlotSettings.Instance.ScanNumber - 1];
 
-            var scatter = plt.Add.ScatterLine(x, y);
+            var scatter = _spectrumPlot.Plot.Add.ScatterLine(x, y);
             scatter.LineWidth = 2F;
             scatter.Color = PlotSettings.Instance.Spectrum.LineColor;
+            scatter.Label = "RawData";
 
-            plt.XLabel("Wavelength / nm");
-            plt.YLabel("Absorbance");
+            _spectrumPlot.Plot.XLabel("Wavelength / nm");
+            _spectrumPlot.Plot.YLabel("Absorbance");
 
             if (PlotSettings.Instance.Spectrum.HoldManualLimits)
             {
-                plt.Axes.SetLimits(PlotSettings.Instance.Spectrum.XMin,
+                _spectrumPlot.Plot.Axes.SetLimits(PlotSettings.Instance.Spectrum.XMin,
                     PlotSettings.Instance.Spectrum.XMax,
                     PlotSettings.Instance.Spectrum.YMin,
                     PlotSettings.Instance.Spectrum.YMax);
             }
             else
             {
-                plt.Axes.AutoScale();
+                _spectrumPlot.Plot.Axes.AutoScale();
             }
-            
-            plt.Axes.AntiAlias(true);
+
+            _spectrumPlot.Plot.Axes.AntiAlias(true);
+
+            _spectrumPlot.Refresh();
+        }
+
+        private void PlotSpectrumNewScanNumber()
+        {
+            if (_spectrumViewModel.Wavelengths.Count() == 0)
+            {
+                return;
+            }
+
+            var plot = _spectrumPlot.Plot.GetPlottables()
+                .OfType<Scatter>() // Filters and casts only Scatter plots
+                .FirstOrDefault(plot => plot.LegendText == "RawData");
+
+            if (plot != null)
+            {
+                _spectrumPlot.Plot.Remove(plot);
+            }
+
+            var idx = PlotSettings.Instance.ScanNumber;
+
+            double[] x = _spectrumViewModel.Wavelengths;
+            double[] y = _spectrumViewModel.IntensityList[PlotSettings.Instance.ScanNumber - 1];
+
+            var scatter = _spectrumPlot.Plot.Add.ScatterLine(x, y);
+            scatter.LineWidth = 2F;
+            scatter.Color = PlotSettings.Instance.Spectrum.LineColor;
+            scatter.LegendText = "RawData";
+
+            _spectrumPlot.Plot.XLabel("Wavelength / nm");
+            _spectrumPlot.Plot.YLabel("Absorbance");
+
+            if (PlotSettings.Instance.Spectrum.HoldManualLimits)
+            {
+                _spectrumPlot.Plot.Axes.SetLimits(PlotSettings.Instance.Spectrum.XMin,
+                    PlotSettings.Instance.Spectrum.XMax,
+                    PlotSettings.Instance.Spectrum.YMin,
+                    PlotSettings.Instance.Spectrum.YMax);
+            }
+            else
+            {
+                _spectrumPlot.Plot.Axes.AutoScale();
+            }
+
+            _spectrumPlot.Plot.Axes.AntiAlias(true);
 
             _spectrumPlot.Refresh();
         }
@@ -490,7 +553,7 @@ namespace RVPDA.Models
 
         private void TrimmedDataChanged()
         {
-            PlotMassSpectrum();
+            PlotSpectrum();
 
             if (PlotSettings.Instance.Chromatogram.Style == "Map")
             {
@@ -647,10 +710,10 @@ namespace RVPDA.Models
             SetSpectrumManualLimits("Y");
         }
 
-        public (double[], double[]) TrimDataToMassRange(double[] xData, double[] yData)
+        public (double[], double[]) TrimDataToWavelengthRange(double[] xData, double[] yData)
         {
-            var min = PlotSettings.Instance.MassRangeMinimum;
-            var max = PlotSettings.Instance.MassRangeMaximum;
+            var min = PlotSettings.Instance.WavelengthRangeMinimum;
+            var max = PlotSettings.Instance.WavelengthRangeMaximum;
 
             // Get the indices of values between Min and Max
             var indices = xData
@@ -666,22 +729,75 @@ namespace RVPDA.Models
             return (sliced_xData, sliced_yData);
         }
 
+        public void PlotImportedSpectrum(string filePath)
+        {
+            var plot = _spectrumPlot.Plot.GetPlottables()
+                .OfType<Scatter>() // Filters and casts only Scatter plots
+                .FirstOrDefault(plot => plot.LegendText != "RawData");
+
+            if (plot != null)
+            {
+                _spectrumPlot.Plot.Remove(plot);
+            }
+
+            double[] x = _spectrumViewModel.ImportedWavelength;
+            double[] y = _spectrumViewModel.ImportedAbsorbance.Clone() as double[];
+
+            double scaler = PlotSettings.Instance.Spectrum.ImportedSpectrumScaler;
+            if (scaler != 1.0)
+            {
+                for (int i = 0; i < y.Length; i++)
+                {
+                    y[i] *= scaler;
+                }
+            }
+
+            var newScatter = _spectrumPlot.Plot.Add.ScatterLine(x, y);
+            newScatter.LegendText = filePath.Split("\\").Last();
+            newScatter.LineWidth = 2F;
+            newScatter.Color = PlotSettings.Instance.Spectrum.ImportedLineColor;
+
+            if (PlotSettings.Instance.Spectrum.HoldManualLimits)
+            {
+                //
+            }
+            else
+            {
+                _spectrumPlot.Plot.Axes.AutoScale();
+            }
+
+            _spectrumPlot.Refresh();
+
+        }
+
+        public void ImportedSpectrumVisibilityChanged()
+        {
+            var plot = _spectrumPlot.Plot.GetPlottables()
+                .OfType<Scatter>() // Filters and casts only Scatter plots
+                .FirstOrDefault(plot => plot.LegendText != "RawData");
+
+            if (plot != null)
+            {
+                plot.IsVisible = PlotSettings.Instance.Spectrum.ShowImportedSpectrum;
+            }
+        }
+
         //                Helper methods for mouse/plot interactions
         /******************************************************************************/
-        private void _chromatogramPlot_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+        private void Plot_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
         {
             e.Handled = true;
         }
 
-        private void _chromatogramPlot_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+        private void Plot_PreviewMouseDown(object sender, MouseButtonEventArgs e)
         {
-            if (e.ClickCount == 2 && (sender as WpfPlot).Name == "ChromatogramPlot")
+            if (e.ClickCount == 2)
             {
                 // allow for double clicks to open options again if closed
                 return;
             }
 
-            if (e.ClickCount == 1)
+            if (e.ClickCount == 1 && (sender as WpfPlot).Name == "ChromatogramPlot")
             {
                 ChromPlot_MouseDown(sender, e);
                 e.Handled = true;
@@ -689,6 +805,7 @@ namespace RVPDA.Models
             }
             e.Handled = true;
         }
+
 
         private void ChromPlot_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
@@ -732,12 +849,17 @@ namespace RVPDA.Models
             PlotSettings.Instance.Spectrum.YMin = limits.YRange.Min;
             PlotSettings.Instance.Spectrum.YMax = limits.YRange.Max;
 
+            OpenSpectrumPlotOptionsWindow();
+        }
+
+        public void OpenSpectrumPlotOptionsWindow()
+        {
             var window = Application.Current.Windows.OfType<SpectrumOptionsView>().FirstOrDefault();
             if (window == null)
             {
                 SpectrumOptionsView view = new SpectrumOptionsView();
 
-                view.Top = Application.Current.MainWindow.Top + view.Height;
+                view.Top = Application.Current.MainWindow.Top + Application.Current.MainWindow.Height - view.Height;
                 view.Left = Application.Current.MainWindow.Left + Application.Current.MainWindow.Width;
 
                 view.Show();

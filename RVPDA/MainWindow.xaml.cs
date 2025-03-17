@@ -43,9 +43,6 @@ namespace RVPDA.Views
         {
             switch (e.PropertyName)
             {
-                case "Polarity":
-                    Info_Polarity.Text = (sender as SpectrumViewModel).Polarity;
-                    break;
                 case "NumberOfScans":
                     Info_NumberOfScans.Text = (sender as SpectrumViewModel).NumberOfScans;
                     break;
@@ -156,9 +153,9 @@ namespace RVPDA.Views
             }
         }
 
-        private void ChangeMassRangeLimit(object sender, RoutedEventArgs e)
+        private void ChangeWavelengthRange(object sender, RoutedEventArgs e)
         {
-            LimitMassRangeView dialog = new LimitMassRangeView();
+            LimitWavelengthRangeView dialog = new LimitWavelengthRangeView();
             if (dialog.ShowDialog() == true)
             {
 
