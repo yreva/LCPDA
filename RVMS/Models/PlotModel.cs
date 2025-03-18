@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Xml.Linq;
 using Microsoft.VisualBasic;
 using RawVision.ViewModels;
@@ -793,6 +794,20 @@ namespace RawVision.Models
                 var mouse = e.GetPosition(_chromatogramPlot);
                 var x = mouse.X;
                 var y = mouse.Y;
+
+                // Get the DPI scale factor
+                PresentationSource source = PresentationSource.FromVisual((Visual)sender);
+                double dpiX = 1.0, dpiY = 1.0;
+                if (source?.CompositionTarget != null)
+                {
+                    dpiX = source.CompositionTarget.TransformToDevice.M11;
+                    dpiY = source.CompositionTarget.TransformToDevice.M22;
+                }
+
+                // Adjust coordinates
+                x *= dpiX;
+                y *= dpiY;
+
                 double clickedX = _chromatogramPlot.Plot.GetCoordinates(new Pixel(x, y)).X;
 
                 // Find the closest time point

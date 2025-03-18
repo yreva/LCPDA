@@ -902,7 +902,6 @@ namespace RVPDA.Models
 
                 double clickedX = _chromatogramPlot.Plot.GetCoordinates(new Pixel(x, y)).X;
 
-
                 // Find the closest time point
                 double nearestTime = _chromatogramViewModel.Times.OrderBy(x => Math.Abs(x - clickedX)).FirstOrDefault();
                 // Update ViewModel

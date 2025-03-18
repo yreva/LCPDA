@@ -10,6 +10,7 @@
 	  <AssemblyName>RawVisionMS</AssemblyName>
 	  <BaseOutputPath>..\RawVisionBuild</BaseOutputPath>
 	  <RestorePackagesPath>..\RawVisionBuild\SharedPackages</RestorePackagesPath>
+	  <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
 
 <ItemGroup>
