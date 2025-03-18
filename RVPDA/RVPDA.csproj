@@ -10,6 +10,7 @@
       <ApplicationIcon>Resources\Images\rawvision_pda.ico</ApplicationIcon>
       <AssemblyName>RawVisionPDA</AssemblyName>
       <BaseOutputPath>..\RawVisionBuild</BaseOutputPath>
+	  <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -38,7 +39,7 @@
 		<HintPath>lib\ThermoFisher.CommonCore.RawFileReader.dll</HintPath>
 	</Reference>
 </ItemGroup>
-
+	
 
 	<ItemGroup>
     <PackageReference Include="ScottPlot" Version="5.0.54" />
