@@ -139,7 +139,7 @@ namespace RVPDA.Views
 
         private void OnClick_AutoY(object sender, RoutedEventArgs e)
         {
-            PlotSettings.Instance.Chromatogram.AutoScaleY += 1;
+            PlotSettings.Instance.Spectrum.AutoScaleY += 1;
             YMin.Text = Math.Round(PlotSettings.Instance.Spectrum.YMin, 2).ToString();
             YMax.Text = Math.Round(PlotSettings.Instance.Spectrum.YMax, 2).ToString();
         }
