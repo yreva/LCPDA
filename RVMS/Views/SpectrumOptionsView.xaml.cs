@@ -93,8 +93,8 @@ namespace RawVision.Views
         private void OnClick_AutoY(object sender, RoutedEventArgs e)
         {
             PlotSettings.Instance.Chromatogram.AutoScaleY += 1;
-            XMin.Text = Math.Round(PlotSettings.Instance.Spectrum.YMin, 2).ToString();
-            XMax.Text = Math.Round(PlotSettings.Instance.Spectrum.YMax, 2).ToString();
+            YMin.Text = Math.Round(PlotSettings.Instance.Spectrum.YMin, 2).ToString();
+            YMax.Text = Math.Round(PlotSettings.Instance.Spectrum.YMax, 2).ToString();
         }
 
 

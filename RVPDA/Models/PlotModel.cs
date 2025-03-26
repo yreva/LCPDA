@@ -57,6 +57,7 @@ namespace RVPDA.Models
 
                 case "WavelengthRangeLimitEnabled":
                     _spectrumViewModel.TrimDataToWavelengthRange();
+                    if (PlotSettings.Instance.Chromatogram.Style == "Map") Plot2DChromatogram(); ;
                     break;
 
             }
@@ -191,7 +192,7 @@ namespace RVPDA.Models
             PlotSettings.Instance.Chromatogram.PropertyChanged += PlotSettings_ChromatogramPropertyChanged;
             PlotSettings.Instance.Spectrum.PropertyChanged += PlotSettings_SpectrumPropertyChanged;
 
-            SetColormapByName("Ice", false);
+            SetColormapByName("Ice", true);
 
             // subscribe to plot events
             _chromatogramPlot.MouseDown += ChromPlot_MouseDown;
@@ -289,6 +290,12 @@ namespace RVPDA.Models
 
         private void ResetLineColor()
         {
+            // exit if 2D chromatogram is active
+            if (PlotSettings.Instance.Chromatogram.Style != "Line")
+            {
+                return;
+            }
+
             var plots = _chromatogramPlot.Plot.GetPlottables();
 
             if (plots.Count() == 0)
@@ -327,7 +334,7 @@ namespace RVPDA.Models
             plt.Clear();
 
             var x = _chromatogramViewModel.Times;
-            var y = _chromatogramViewModel.TIC;
+            var y = _chromatogramViewModel.TotalAbs;
 
             plt.XLabel("Retention Time / min");
             plt.YLabel("Intensity");
@@ -354,15 +361,15 @@ namespace RVPDA.Models
         {
             if (PlotSettings.Instance.Chromatogram.MapScaling == "Linear")
             {
-                PlotLinearMzMap();
+                PlotLinearAbsorbanceMap();
             }
 
             else if (PlotSettings.Instance.Chromatogram.MapScaling == "Log10")
             {
-                PlotLog10MzMap();
+                PlotLog10AbsorbanceMap();
             }
         }
-        private void PlotLinearMzMap()
+        private void PlotLinearAbsorbanceMap()
         {
             double[] x;
             double[] y;
@@ -370,7 +377,18 @@ namespace RVPDA.Models
 
             x = _chromatogramViewModel.Times;
             y = _spectrumViewModel.Wavelengths;
-            z = _spectrumViewModel.Intensity;
+
+            int i = 0;
+            z = new double[y.Length,x.Length];
+            foreach (var spectrum in _spectrumViewModel.IntensityList)
+            {
+                for (int j = 0; j < spectrum.Length; j++)
+                {
+                    z[j,i] = spectrum[j];
+                }
+                i += 1;
+            }
+            //z = _spectrumViewModel.Intensity;
 
             var plt = _chromatogramPlot.Plot;
             plt.Clear();
@@ -379,7 +397,7 @@ namespace RVPDA.Models
 
             hm.Colormap = Colormap;
             hm.Smooth = false;
-            hm.FlipRows = true;
+            hm.FlipVertically = true;
             hm.Extent = new CoordinateRect(x.Min(),x.Max(),y.Min(),y.Max());
 
             if (_colorbar == null)
@@ -405,7 +423,7 @@ namespace RVPDA.Models
 
             _chromatogramPlot.Refresh();
         }
-        private void PlotLog10MzMap()
+        private void PlotLog10AbsorbanceMap()
         {
             double[] x;
             double[] y;
@@ -413,7 +431,16 @@ namespace RVPDA.Models
 
             x = _chromatogramViewModel.Times;
             y = _spectrumViewModel.Wavelengths;
-            z = _spectrumViewModel.Log10Intensity;
+            int i = 0;
+            z = new double[y.Length, x.Length];
+            foreach (var spectrum in _spectrumViewModel.Log10IntensityList)
+            {
+                for (int j = 0; j < spectrum.Length; j++)
+                {
+                    z[j, i] = spectrum[j];
+                }
+                i += 1;
+            }
 
 
             var plt = _chromatogramPlot.Plot;
@@ -423,9 +450,20 @@ namespace RVPDA.Models
 
             hm.Colormap = Colormap;
             hm.Smooth = false;
-            hm.FlipRows = true;
+            hm.FlipVertically = true;
             hm.Extent = new CoordinateRect(x.Min(), x.Max(), y.Min(), y.Max());
 
+
+            // set manual color range if it has been set
+            if (!double.IsNaN(PlotSettings.Instance.Chromatogram.ColorMin) &&
+                !double.IsNaN(PlotSettings.Instance.Chromatogram.ColorMax) &&
+                PlotSettings.Instance.Chromatogram.ColorMax > PlotSettings.Instance.Chromatogram.ColorMin)
+            {
+                hm.ManualRange = new Range(PlotSettings.Instance.Chromatogram.ColorMin,
+                    PlotSettings.Instance.Chromatogram.ColorMax);
+            }
+
+            // add colorbar if it doesn't exist, else redirect its source
             if (_colorbar == null)
             {
                 _colorbar = plt.Add.ColorBar(hm);
@@ -437,16 +475,17 @@ namespace RVPDA.Models
             _colorbar.IsVisible = true;
             _colorbar.Label = "Log(microAu)";
 
-
+            // show vertical line for the scan being show in spectrum plot
             var vline = plt.Add.VerticalLine(_chromatogramViewModel.Times[PlotSettings.Instance.ScanNumber - 1]);
             vline.LineWidth = 1;
             vline.Color = ScottPlot.Color.FromHex("#0f0f0f");
-            vline.IsVisible = PlotSettings.Instance.Chromatogram.VLineEnabled;
+            vline.IsVisible = PlotSettings.Instance.Chromatogram.VLineEnabled; // hide the line if its visibility is disabled
 
-
+            // set labels and rescale axes
             plt.XLabel("Retention Time / min");
             plt.YLabel("Wavelength / nm");
             plt.Axes.AutoScale();
+            // TODO: implement HoldManualLimits for this plot as well. Updating things like the colormap rescale it?
 
 
             _chromatogramPlot.Refresh();
@@ -639,6 +678,11 @@ namespace RVPDA.Models
 
             if (axis == "Color")
             {
+                if (PlotSettings.Instance.Chromatogram.Style != "Map")
+                {
+                    return;
+                }
+
                 if (double.IsNaN(PlotSettings.Instance.Chromatogram.ColorMin) ||
                     double.IsNaN(PlotSettings.Instance.Chromatogram.ColorMax))
                 {

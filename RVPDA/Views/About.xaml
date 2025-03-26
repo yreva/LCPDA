@@ -14,8 +14,8 @@
             a handy way of quickly visualizing chromatographic data.
         </TextBlock>
         <TextBlock DockPanel.Dock="Top" Margin="10 3" TextWrapping="Wrap" TextAlignment="Center">
-        Although it was originally developed to analyze UV/Vis absorption spectra produced
-        by Diode Array Detectors, RawVision has expanded toward also analyzing mass spectra.
+            This suite of tools can be used to analyze data from both mass spectrometer and diode array detectors. Data can be visualized either in the one-dimensional chromatogram view, 
+            or in a two-dimensional ion or absorbance map.
         </TextBlock>
         <Rectangle Height="3" DockPanel.Dock="Top" Fill="LightGray" Margin="5 5 5 0"/>
         <TextBlock DockPanel.Dock="Top" Margin="10 5" TextWrapping="Wrap" TextAlignment="Center" FontWeight="Bold">
@@ -44,9 +44,9 @@
         <Rectangle Height="3" DockPanel.Dock="Top" Fill="LightGray" Margin="5 5 5 0"/>
 
         <TextBlock DockPanel.Dock="Top" Margin="10 10 10 3" TextWrapping="Wrap" TextAlignment="Center" >
-            While this program is not open-source, feedback is still greatly appreciated. Feel free to share yours either anonymously on the Daltonian Scientific site, or directly at rawvision@daltonianscientific.com
+            User feedback on this program is greatly appreciated. Feel free to share yours either anonymously on the Daltonian Scientific site, or directly at rawvision@daltonianscientific.com
         </TextBlock>
-
+        
         <Button Content="Close" Click="OnClose" Height="20" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="15 0 15 15" DockPanel.Dock="Bottom"/>
     </DockPanel>
 </Window>

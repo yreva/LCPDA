@@ -12,7 +12,7 @@ namespace RVPDA.ViewModels
 
         private IRawDataExtended _rawFile;
         private double[] times;
-        private double[] tic;
+        private double[] totalAbs;
 
 
         public ChromatogramViewModel()
@@ -47,11 +47,11 @@ namespace RVPDA.ViewModels
             }
 
             times = trace[0].Times.ToArray();
-            tic = new double[times.Length];
+            totalAbs = new double[times.Length];
 
             for (int i = 0; i < trace[0].Length; i++)
             {
-                tic[i] = trace[0].Intensities[i]/1e6;
+                totalAbs[i] = trace[0].Intensities[i]/1e6;
             }
 
             Console.WriteLine();
@@ -62,9 +62,9 @@ namespace RVPDA.ViewModels
             get { return times; }
         }
 
-        public double[] TIC
+        public double[] TotalAbs
         {
-            get { return tic; }
+            get { return totalAbs; }
         }
 
 

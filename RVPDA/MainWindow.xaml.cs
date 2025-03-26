@@ -32,6 +32,7 @@ namespace RVPDA.Views
             
             viewModel.ChromatogramPlot.PreviewKeyDown += WpfPlot_KeyDown;
             viewModel.SpectrumPlot.PreviewKeyDown += WpfPlot_KeyDown;
+            viewModel.ChromatogramPlot.KeyDown += WpfPlot_CtrlKeyDown;
             viewModel.SpectrumViewModel.PropertyChanged += SpectrumViewModel_OnPropertyChanged;
         }
 
@@ -69,13 +70,22 @@ namespace RVPDA.Views
         private void New_Click(object sender, RoutedEventArgs e)
         {
             InitializeComponent();
+            Style = (Style)FindResource(typeof(Window));
+            // Set the DataContext to the MainViewModel
             var viewModel = new MainViewModel();
             this.DataContext = viewModel;
 
             this.PreviewKeyDown += MainWindow_PreviewKeyDown;
 
+            viewModel.ChromatogramPlot.Name = "ChromatogramPlot";
+            viewModel.SpectrumPlot.Name = "SpectrumPlot";
+
             ChromatogramContainer.Children.Add(viewModel.ChromatogramPlot);
             SpectrumContainer.Children.Add(viewModel.SpectrumPlot);
+
+            viewModel.ChromatogramPlot.PreviewKeyDown += WpfPlot_KeyDown;
+            viewModel.SpectrumPlot.PreviewKeyDown += WpfPlot_KeyDown;
+            viewModel.SpectrumViewModel.PropertyChanged += SpectrumViewModel_OnPropertyChanged;
         }
 
         public void IncrementScanNumber(object sender, RoutedEventArgs e)
@@ -121,6 +131,11 @@ namespace RVPDA.Views
                     break;
 
             }
+        }
+
+        private void WpfPlot_CtrlKeyDown(object sender, KeyEventArgs e)
+        {
+            //
         }
 
         public void ChangeMapScaling(object sender, RoutedEventArgs e)

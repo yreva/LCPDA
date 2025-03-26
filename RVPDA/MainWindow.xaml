@@ -119,7 +119,15 @@
 
                             <!-- Ninth row -->
                             <Button Content="Show Spectrum Table" Margin="5" Command="{Binding Command_ShowPeakList}"/>
-                            <Button Content="Import Spectrum" Margin="5 0" Command="{Binding Command_ImportSpectrum}"/>
+                            <Button Content="Import Spectrum" Margin="5 0" Command="{Binding Command_ImportSpectrum}">
+                                <Button.ToolTip>
+                                    <ToolTip Background="LightYellow" Foreground="Black">
+                                        <StackPanel>
+                                            <TextBlock Text="Import a spectrum from a CSV. Must be formatted with column 1 as x values and column 2 as y values, and no other columns. One row of headers are allowed." FontWeight="Bold"/>
+                                        </StackPanel>
+                                    </ToolTip>
+                                </Button.ToolTip>
+                            </Button>
 
 
                             <TextBlock Text=""/>

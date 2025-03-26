@@ -10,6 +10,7 @@ using System.Windows.Input;
 using System.Windows.Media.Animation;
 using OpenTK.Windowing.Common.Input;
 using RVPDA.Views;
+using ThermoFisher.CommonCore.Data;
 
 
 namespace RVPDA.ViewModels
@@ -20,10 +21,14 @@ namespace RVPDA.ViewModels
 
         private double[] wavelengths;
 
-        private double[,] intensity;
-        private double[,] log10intensity;
+        private double[,] intensityRaw;
+        private double[,] intensitySliced;
 
-        private List<double[]> intensityList;
+        private double[,] log10intensityRaw;
+        private double[,] log10intensitySliced;
+
+        private List<double[]> intensityListSliced;
+        private List<double[]> intensityListRaw;
         private List<double[]> log10intensityList;
 
         private double[] importedWavelength;
@@ -35,17 +40,17 @@ namespace RVPDA.ViewModels
 
         public double[,] Intensity
         {
-            get { return intensity; }
+            get { return intensitySliced ?? intensityRaw; } 
         }
 
         public double[,] Log10Intensity
         {
-            get { return intensity; }
+            get { return log10intensitySliced ?? log10intensityRaw; }
         }
 
         public List<double[]> IntensityList
         {
-            get { return intensityList; }
+            get { return intensityListSliced ?? intensityListRaw; }
         }
 
         public List<double[]> Log10IntensityList
@@ -97,15 +102,15 @@ namespace RVPDA.ViewModels
             set { _peakLists = value; }
         }
 
-        public SpectralData Data { get; set; }
-
         public SpectrumViewModel()
         {
-            Data = new SpectralData();
             wavelengths = new double[0];
-            intensity = new double[0, 0];
-            log10intensity = new double[0, 0];
-            intensityList = new List<double[]>();
+            intensityRaw = new double[0, 0];
+            log10intensityRaw = new double[0, 0];
+            intensitySliced = null;
+            log10intensitySliced = null;
+            intensityListRaw = new List<double[]>();
+            intensityListSliced = null;
             log10intensityList = new List<double[]>();
 
             scanNumbers = new List<int>();
@@ -131,6 +136,9 @@ namespace RVPDA.ViewModels
 
             System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
             sw.Start();
+
+            double maxInt = 0;
+
             int i = 0;
             for (int sn = firstScanNumber; sn <= lastScanNumber; sn++)
             {
@@ -143,33 +151,29 @@ namespace RVPDA.ViewModels
                     wavelengths = scan.Positions;
                 }
 
-                intensity = new double[_numberOfScansInt, scan.Intensities.Length];
-                log10intensity = new double[_numberOfScansInt, scan.Intensities.Length];
+                intensityRaw = new double[_numberOfScansInt, scan.Intensities.Length];
+                log10intensityRaw = new double[_numberOfScansInt, scan.Intensities.Length];
 
                 var log10valuesForList = new double[scan.Intensities.Length];
                 var valuesForList = new double[scan.Intensities.Length];
 
                 for (int j = 0; j < scan.Intensities.Length; j++)
                 {
-                    intensity[i, j] = scan.Intensities[j]/1e6;
-                    log10intensity[i,j] = scan.Intensities[j] <= 0 ? 0 : Math.Log10(scan.Intensities[j]);
-                    log10valuesForList[j] = log10intensity[i, j];
-                    valuesForList[j] = intensity[i, j];
+                    intensityRaw[i, j] = scan.Intensities[j];
+                    log10intensityRaw[i,j] = scan.Intensities[j] <= 0 ? 0 : Math.Log10(scan.Intensities[j]);
+                    log10valuesForList[j] = log10intensityRaw[i, j];
+                    valuesForList[j] = intensityRaw[i, j];
                 }
-
+                
                 scanNumbers.Add(sn);
                 log10intensityList.Add(log10valuesForList);
-                intensityList.Add(valuesForList);
+                intensityListRaw.Add(scan.Intensities);
                 i++;
             }
 
-            Data.SetAborbances(intensity);
-            Data.SetTimes(times);
-            Data.SetWavelengths(wavelengths);
-
             NumberOfScans = scanNumbers.Count().ToString();
             sw.Stop();
-            Console.WriteLine("Time to get mass spectra: " + sw.ElapsedMilliseconds + " ms");
+            Console.WriteLine("Time to get PDA spectra: " + sw.ElapsedMilliseconds + " ms");
 
         }
 
@@ -180,9 +184,9 @@ namespace RVPDA.ViewModels
             var min = PlotSettings.Instance.WavelengthRangeMinimum;
             var max = PlotSettings.Instance.WavelengthRangeMaximum;
 
-            var wl = Data.GetWavelengths();
-            var au = Data.GetAbsorbances();
-            var times = Data.GetTimes();
+            var wl = wavelengths;
+            var au = intensityListRaw;
+            //var times = Data.GetTimes();
 
             // Get the indices of values between Min and Max
             var indices = wl
@@ -192,20 +196,33 @@ namespace RVPDA.ViewModels
                 .ToArray();
 
             // Create a new 2D array for the selected rows
-            intensity = new double[au.GetLength(0), indices.Length];
-            log10intensity = new double[au.GetLength(0), indices.Length];
+            intensitySliced = new double[au.Count(), indices.Length];
+            intensityListSliced = new List<double[]>();
+            log10intensitySliced = new double[au.Count(), indices.Length];
             wavelengths = new double[indices.Length];
 
             // Fill the new array with the selected rows
-            for (int i = 0; i < indices.Length; i++)
+            for (int i = 0; i < au.Count(); i++)
             {
-                wavelengths[i] = wl[indices[i]];
-                int columnIndex = indices[i];
-                for (int j = 0; j < au.GetLength(0); j++)
+                double[] valuesForList = new double[indices.Length];
+
+                for (int j = 0; j < indices.Length; j++)
                 {
-                    intensity[j, i] = au[j, columnIndex];
-                    log10intensity[j, i] = au[j, columnIndex] <= 0 ? 0 : Math.Log10(au[j, columnIndex] *1e6);
+                    int columnIndex = indices[j];
+
+                    intensitySliced[i, j] = au[i][columnIndex];
+                    log10intensitySliced[i, j] = au[i][columnIndex] <= 0 ? 0 : Math.Log10(au[i][columnIndex]);
+                    valuesForList[j] = au[i][columnIndex];
+
+                    if (i == 0)
+                    {
+                        wavelengths[j] = wl[columnIndex];
+                    }
                 }
+
+
+                intensityListSliced.Add(valuesForList);
+
             }
 
             Mouse.OverrideCursor = null;
@@ -215,11 +232,11 @@ namespace RVPDA.ViewModels
         {
             ObservableCollection<DataRow> peaks = new ObservableCollection<DataRow>();
 
-            for (int i = 0; i < intensityList[ScanNumber].Count(); i++)
+            for (int i = 0; i < IntensityList[ScanNumber].Count(); i++)
             {
                 DataRow row = new DataRow();
                 row.Mass = wavelengths[i];
-                row.Intensity = intensityList[ScanNumber][i];
+                row.Intensity = IntensityList[ScanNumber][i];
                 peaks.Add(row);
             }
 
@@ -246,55 +263,5 @@ namespace RVPDA.ViewModels
     {
         public double Mass { get; set; }
         public double Intensity { get; set; }
-    }
-
-    // this class is used to store the spectral data, without manipulation
-    // and can be recalled to get the original data
-    public class SpectralData
-    {
-        private double[] Wav;
-        private double[] Time;
-        private double[,] AU;
-
-        // Constructor
-        public SpectralData()
-        {
-            Wav = new double[0];
-            Time = new double[0];
-            AU = new double[0, 0];
-        }
-
-        public double[] GetWavelengths()
-        {
-            return Wav.Clone() as double[];
-        }
-
-        public void SetWavelengths(double[] wl)
-        {
-            Wav = wl.Clone() as double[];
-            return;
-        }
-
-        public double[] GetTimes()
-        {
-            return Time.Clone() as double[];
-        }
-
-        public void SetTimes(double[] times)
-        {
-            Time = times.Clone() as double[];
-            return;
-        }
-
-        public double[,] GetAbsorbances()
-        {
-            return AU.Clone() as double[,];
-        }
-
-        public void SetAborbances(double[,] abs)
-        {
-            AU = abs.Clone() as double[,];
-            return;
-        }
     }
 }
