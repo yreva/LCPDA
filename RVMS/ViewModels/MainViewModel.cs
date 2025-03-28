@@ -311,7 +311,6 @@ namespace RawVision.ViewModels
         public ICommand LoadFileCommand { get; }
         public void LoadFilePressed()
         {
-            //HandleLoadingPopup("Start");
             Mouse.OverrideCursor = Cursors.Wait;
 
             if (SelectedFilePath == null)

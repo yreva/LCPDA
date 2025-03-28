@@ -24,7 +24,6 @@ namespace RVPDA.Views
         public LimitWavelengthRangeView()
         {
             InitializeComponent();
-            LimitEnabled.IsChecked = PlotSettings.Instance.WavelengthRangeLimitEnabled;
             if (PlotSettings.Instance.WavelengthRangeLimitEnabled)
             {
                 MassMin.Text = Math.Round(PlotSettings.Instance.WavelengthRangeMinimum, 2).ToString();
@@ -37,7 +36,7 @@ namespace RVPDA.Views
         private void CheckboxChanged(object sender, RoutedEventArgs e)
         {
             return;
-            PlotSettings.Instance.WavelengthRangeLimitEnabled = LimitEnabled.IsChecked.GetValueOrDefault();
+            //PlotSettings.Instance.WavelengthRangeLimitEnabled = LimitEnabled.IsChecked.GetValueOrDefault();
             if (PlotSettings.Instance.WavelengthRangeLimitEnabled)
             {
                 MassMin.Text = Math.Round(PlotSettings.Instance.WavelengthRangeMinimum, 2).ToString();
@@ -102,15 +101,34 @@ namespace RVPDA.Views
             }
         }
 
-        private void OnClick_CloseWindow(object sender, RoutedEventArgs e)
+        private void OnClick_CloseAndApplyRange(object sender, RoutedEventArgs e)
         {
             double.TryParse(MassMin.Text, out double minVal);
+
+            if (minVal == null)
+            {
+                MessageBox.Show("Invalid input for minimum wavelength. Please enter a valid number.", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             PlotSettings.Instance.WavelengthRangeMinimum = minVal;
 
             double.TryParse(MassMax.Text, out double maxVal);
+
+            if (maxVal == null)
+            {
+                MessageBox.Show("Invalid input for maximum wavelength. Please enter a valid number.", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
             PlotSettings.Instance.WavelengthRangeMaximum = maxVal;
 
-            PlotSettings.Instance.WavelengthRangeLimitEnabled = LimitEnabled.IsChecked.GetValueOrDefault();
+            PlotSettings.Instance.WavelengthRangeLimitEnabled = true;
+            this.Close();
+        }
+
+        private void OnClick_CloseAndAutoscale(object sender, RoutedEventArgs e)
+        {
+
+            PlotSettings.Instance.WavelengthRangeLimitEnabled = false;
             this.Close();
         }
     }

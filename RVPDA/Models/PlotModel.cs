@@ -56,8 +56,7 @@ namespace RVPDA.Models
                     break;
 
                 case "WavelengthRangeLimitEnabled":
-                    _spectrumViewModel.TrimDataToWavelengthRange();
-                    if (PlotSettings.Instance.Chromatogram.Style == "Map") Plot2DChromatogram(); ;
+                    WavelengthRangeSettingChanged();
                     break;
 
             }
@@ -73,6 +72,12 @@ namespace RVPDA.Models
                     break;
                 case "AutoScaleY":
                     ResetScalingY(true);
+                    _chromatogramPlot.Refresh();
+                    break;
+
+                case "AutoScaleColor":
+                    ResetScalingColor();
+                    _chromatogramPlot.Refresh();
                     break;
 
                 case "XMin":
@@ -399,6 +404,8 @@ namespace RVPDA.Models
             hm.Smooth = false;
             hm.FlipVertically = true;
             hm.Extent = new CoordinateRect(x.Min(),x.Max(),y.Min(),y.Max());
+            hm.ManualRange = new Range(PlotSettings.Instance.Chromatogram.ColorMin, PlotSettings.Instance.Chromatogram.ColorMax);
+
 
             if (_colorbar == null)
             {
@@ -442,7 +449,6 @@ namespace RVPDA.Models
                 i += 1;
             }
 
-
             var plt = _chromatogramPlot.Plot;
             plt.Clear();
 
@@ -453,15 +459,23 @@ namespace RVPDA.Models
             hm.FlipVertically = true;
             hm.Extent = new CoordinateRect(x.Min(), x.Max(), y.Min(), y.Max());
 
+            double hmRangeMin = PlotSettings.Instance.Chromatogram.ColorMin <= 0
+                ? 0
+                : Math.Log10(PlotSettings.Instance.Chromatogram.ColorMin);
+            double hmRangeMax = PlotSettings.Instance.Chromatogram.ColorMin <= 0
+                ? 0
+                : Math.Log10(PlotSettings.Instance.Chromatogram.ColorMax);
+            hm.ManualRange = new Range(hmRangeMin, hmRangeMax);
+
 
             // set manual color range if it has been set
-            if (!double.IsNaN(PlotSettings.Instance.Chromatogram.ColorMin) &&
-                !double.IsNaN(PlotSettings.Instance.Chromatogram.ColorMax) &&
-                PlotSettings.Instance.Chromatogram.ColorMax > PlotSettings.Instance.Chromatogram.ColorMin)
-            {
-                hm.ManualRange = new Range(PlotSettings.Instance.Chromatogram.ColorMin,
-                    PlotSettings.Instance.Chromatogram.ColorMax);
-            }
+            //if (!double.IsNaN(PlotSettings.Instance.Chromatogram.ColorMin) &&
+            //    !double.IsNaN(PlotSettings.Instance.Chromatogram.ColorMax) &&
+            //    PlotSettings.Instance.Chromatogram.ColorMax > PlotSettings.Instance.Chromatogram.ColorMin)
+            //{
+            //    hm.ManualRange = new Range(PlotSettings.Instance.Chromatogram.ColorMin,
+            //        PlotSettings.Instance.Chromatogram.ColorMax);
+            //}
 
             // add colorbar if it doesn't exist, else redirect its source
             if (_colorbar == null)
@@ -659,6 +673,13 @@ namespace RVPDA.Models
             SetManualLimits("Y");
         }
 
+        private void ResetScalingColor()
+        {
+            PlotSettings.Instance.Chromatogram.ColorMin = _spectrumViewModel.minIntensity;
+            PlotSettings.Instance.Chromatogram.ColorMax = _spectrumViewModel.maxIntensity;
+            SetManualLimits("Color");
+        }
+
         private void SetManualLimits(string axis)
         {
             if (axis == "X")
@@ -755,23 +776,24 @@ namespace RVPDA.Models
             SetSpectrumManualLimits("Y");
         }
 
-        public (double[], double[]) TrimDataToWavelengthRange(double[] xData, double[] yData)
+        private void WavelengthRangeSettingChanged()
         {
-            var min = PlotSettings.Instance.WavelengthRangeMinimum;
-            var max = PlotSettings.Instance.WavelengthRangeMaximum;
-
-            // Get the indices of values between Min and Max
-            var indices = xData
-                .Select((value, index) => new { value, index })
-                .Where(pair => pair.value >= min && pair.value <= max)
-                .Select(pair => pair.index)
-                .ToArray();
-
-
-            var sliced_xData = indices.Select(i => xData[i]).ToArray();
-            var sliced_yData = indices.Select(i => yData[i]).ToArray();
-
-            return (sliced_xData, sliced_yData);
+            if (PlotSettings.Instance.WavelengthRangeLimitEnabled)
+            {
+                _spectrumViewModel.TrimDataToWavelengthRange();
+                if (PlotSettings.Instance.Chromatogram.Style == "Map")
+                {
+                    Plot2DChromatogram();
+                }
+            }
+            else
+            {
+                _spectrumViewModel.ResetWavelengthRange();
+                if (PlotSettings.Instance.Chromatogram.Style == "Map")
+                {
+                    Plot2DChromatogram();
+                }
+            }
         }
 
         public void PlotImportedSpectrum(string filePath)

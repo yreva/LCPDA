@@ -58,6 +58,9 @@ namespace RVPDA.ViewModels
             get { return log10intensityList; }
         }
 
+        public double minIntensity = double.MaxValue;
+        public double maxIntensity = double.MinValue;
+
         public double[] Wavelengths
         {
             get { return wavelengths; }
@@ -159,10 +162,20 @@ namespace RVPDA.ViewModels
 
                 for (int j = 0; j < scan.Intensities.Length; j++)
                 {
-                    intensityRaw[i, j] = scan.Intensities[j];
-                    log10intensityRaw[i,j] = scan.Intensities[j] <= 0 ? 0 : Math.Log10(scan.Intensities[j]);
+                    double value = scan.Intensities[j];
+                    intensityRaw[i, j] = value;
+                    log10intensityRaw[i,j] = value <= 0 ? 0 : Math.Log10(value);
                     log10valuesForList[j] = log10intensityRaw[i, j];
-                    valuesForList[j] = intensityRaw[i, j];
+                    valuesForList[j] = value;
+
+                    if (value < minIntensity)
+                    {
+                        minIntensity = value;
+                    }
+                    if (value > maxIntensity)
+                    {
+                        maxIntensity = value;
+                    }
                 }
                 
                 scanNumbers.Add(sn);
@@ -174,6 +187,14 @@ namespace RVPDA.ViewModels
             NumberOfScans = scanNumbers.Count().ToString();
             sw.Stop();
             Console.WriteLine("Time to get PDA spectra: " + sw.ElapsedMilliseconds + " ms");
+
+            if (double.IsNaN(PlotSettings.Instance.Chromatogram.ColorMin))
+            {
+                PlotSettings.Instance.Chromatogram.ColorMin = minIntensity;
+                PlotSettings.Instance.Chromatogram.ColorMax = maxIntensity;
+                PlotSettings.Instance.Chromatogram.DefaultMinColorValue = minIntensity;
+                PlotSettings.Instance.Chromatogram.DefaultMaxColorValue = maxIntensity;
+            }
 
         }
 
@@ -226,6 +247,11 @@ namespace RVPDA.ViewModels
             }
 
             Mouse.OverrideCursor = null;
+        }
+
+        public void ResetWavelengthRange()
+        {
+            intensityListSliced = null;
         }
 
         public ObservableCollection<DataRow> CreatePeakList(int ScanNumber)

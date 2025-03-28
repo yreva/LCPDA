@@ -84,6 +84,30 @@ namespace RawVision.ViewModels
             }
         }
 
+        private List<double[]> intensityListRaw;
+        private List<double[]> intensityListSliced;
+
+        public List<double[]> IntensityList
+        {
+            get
+            {
+                return intensityListSliced ?? intensityListRaw;
+            }
+        }
+
+        private List<double[]> log10intensityListRaw;
+        private List<double[]> log10intensityListSliced;
+        public List<double[]> Log10IntensityList
+        {
+            get
+            {
+                return log10intensityListSliced ?? log10intensityListRaw;
+            }
+        }
+
+        public double minIntensity = double.MaxValue;
+        public double maxIntensity = double.MinValue;
+
         private string _numberOfScans;
         public string NumberOfScans
         {
@@ -106,6 +130,9 @@ namespace RawVision.ViewModels
             mz = new List<double[]>();
             intensity = new List<double[]>();
             scanNumbers = new List<int>();
+
+            intensityListRaw = new List<double[]>();
+            log10intensityListRaw = new List<double[]>();
 
             PeakLists = new ObservableCollection<ObservableCollection<DataRow>>();
         }
@@ -189,7 +216,7 @@ namespace RawVision.ViewModels
             intensity.Add(groupedData.Select(item => item.Intensity).ToArray());
         }
 
-        public static async Task<(List<double>, double[,], double[,])> ProcessIntensityMatrixAsync(
+        public async Task<(List<double>, double[,], double[,])> ProcessIntensityMatrixAsync(
                 List<double[]> massLists, List<double[]> intensityLists, int numScans)
         {
             // Step 1: Find all unique mz values
@@ -240,14 +267,33 @@ namespace RawVision.ViewModels
             {
                 int rowIndex = kvp.Key;
                 double[] rowValues = kvp.Value;
+                double[] log10rowValues = new double[rowValues.Length];
                 for (int col = 0; col < numScans; col++)
                 {
                     intensityVsTime[rowIndex, col] = rowValues[col];
+                    log10rowValues[col] = (rowValues[col] == 0) ? 0 : Math.Log10(rowValues[col]);
                     logIntensityVsTime[rowIndex, col] = (rowValues[col] == 0) ? 0 : Math.Log10(rowValues[col]);
+
+                    if (rowValues[col] < minIntensity)
+                    {
+                        minIntensity = rowValues[col];
+                    }
+                    if (rowValues[col] > maxIntensity)
+                    {
+                        maxIntensity = rowValues[col];
+                    }
                 }
+                intensityListRaw.Add(rowValues);
+                log10intensityListRaw.Add(log10rowValues);
             }
 
             MessageBox.Show(Application.Current.MainWindow,"Processing Finished, File Loaded.", "Loading Complete", MessageBoxButton.OK, MessageBoxImage.Information);
+
+            PlotSettings.Instance.Chromatogram.DefaultMinColorValue = minIntensity;
+            PlotSettings.Instance.Chromatogram.DefaultMaxColorValue = maxIntensity;
+
+            PlotSettings.Instance.Chromatogram.ColorMin = minIntensity;
+            PlotSettings.Instance.Chromatogram.ColorMax = maxIntensity;
 
             return (uniqueMZ, intensityVsTime, logIntensityVsTime);
         }

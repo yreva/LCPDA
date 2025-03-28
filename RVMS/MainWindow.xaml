@@ -46,7 +46,7 @@
         </StackPanel>
 
         <!-- Main Content Area (for Chromatogram and Spectrum Canvas) -->
-        <Grid Margin="10,50,10,10">
+        <Grid Margin="10,35,10,10">
             <Grid.RowDefinitions>
                 <RowDefinition Height="6*" />
                 <RowDefinition Height="8*" />
@@ -151,9 +151,25 @@
 
             <!-- Bottom Frame -->
             <StackPanel Orientation="Horizontal" Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="10">
-                <Button x:Name="SaveSpectrumButton" Content="Save Spectrum Figure" Width="150" FontSize="12" IsEnabled="False"/>
-                <Button x:Name="SaveChromatogramButton" Content="Save Chromatogram Figure" Width="200" FontSize="12" Margin="5 0 5 0" IsEnabled="False"/>
-                <Button x:Name="SaveDataButton" Content="Save All Data as Text" Width="200" FontSize="12" Command="{Binding SaveDataCommand}"/>
+                    <Button x:Name="SaveSpectrumButton" Content="Save Spectrum Figure" Width="150" FontSize="12" IsEnabled="False" ToolTipService.ShowOnDisabled="True">
+                        <Button.ToolTip>
+                            <ToolTip Background="LightYellow" Foreground="Black">
+                                <StackPanel>
+                                    <TextBlock Text="To save a figure, right-click on the plot." FontWeight="Bold"/>
+                                </StackPanel>
+                            </ToolTip>
+                        </Button.ToolTip>
+                    </Button>
+                    <Button x:Name="SaveChromatogramButton" Content="Save Chromatogram Figure" Width="200" FontSize="12" Margin="5 0 5 0" IsEnabled="False" ToolTipService.ShowOnDisabled="True">
+                        <Button.ToolTip>
+                            <ToolTip Background="LightYellow" Foreground="Black">
+                                <StackPanel>
+                                    <TextBlock Text="To save a figure, right-click on the plot." FontWeight="Bold"/>
+                                </StackPanel>
+                            </ToolTip>
+                        </Button.ToolTip>
+                    </Button>
+                    <Button x:Name="SaveDataButton" Content="Save All Data as Text" Width="200" FontSize="12" Command="{Binding SaveDataCommand}"/>
             </StackPanel>
         </Grid>
     </Grid>

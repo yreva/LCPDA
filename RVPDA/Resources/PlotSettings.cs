@@ -93,9 +93,6 @@ namespace RVPDA
                 OnPropertyChanged(nameof(WavelengthRangeMaximum));
             }
         }
-
-
-
     }
 
     public class ChromatogramSettings : BaseSettings
@@ -198,6 +195,28 @@ namespace RVPDA
             get => _autoScaleY;
             set => SetProperty(ref _autoScaleY, value, nameof(AutoScaleY));
         }
+
+        private int _autoScaleColor;
+        public int AutoScaleColor
+        {
+            get => _autoScaleColor;
+            set => SetProperty(ref _autoScaleColor, value, nameof(AutoScaleColor));
+        }
+
+        private double _defaultMinColorValue;
+        public double DefaultMinColorValue
+        {
+            get => _defaultMinColorValue;
+            set => SetProperty(ref _defaultMinColorValue, value, nameof(DefaultMinColorValue));
+        }
+
+        private double _defaultMaxColorValue;
+        public double DefaultMaxColorValue
+        {
+            get => _defaultMaxColorValue;
+            set => SetProperty(ref _defaultMaxColorValue, value, nameof(DefaultMaxColorValue));
+        }
+
 
         private string _style;
         public string Style

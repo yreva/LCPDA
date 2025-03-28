@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:RawVision.Views"
         mc:Ignorable="d"
-        Title="Plot Options" Height="430" Width="257" ResizeMode="CanMinimize">
+        Title="Plot Options" Height="370" Width="257" ResizeMode="CanMinimize">
     <ScrollViewer>
         <StackPanel>
 

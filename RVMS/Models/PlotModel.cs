@@ -73,6 +73,11 @@ namespace RawVision.Models
                     ResetScalingY(true);
                     break;
 
+                case "AutoScaleColor":
+                    ResetScalingColor();
+                    _chromatogramPlot.Refresh();
+                    break;
+
                 case "XMin":
                 case "XMax":
                     SetManualLimits("X");
@@ -358,23 +363,26 @@ namespace RawVision.Models
                 PlotLog10MzMap();
             }
         }
+
         private void PlotLinearMzMap()
         {
             double[] x;
             double[] y;
             double[,] z;
 
-            if (PlotSettings.Instance.MassRangeLimitEnabled)
+            x = _chromatogramViewModel.Times;
+            y = _spectrumViewModel.UniqueMasses.ToArray();
+
+            int i = 0;
+            z = new double[y.Length, x.Length];
+            foreach (var spectrum in _spectrumViewModel.IntensityList)
             {
-                x = _chromatogramViewModel.Times;
-                y = _spectrumViewModel.SlicedUniqueMasses.ToArray();
-                z = _spectrumViewModel.SlicedIntensities2D;
-            }
-            else
-            {
-                x = _chromatogramViewModel.Times;
-                y = _spectrumViewModel.UniqueMasses.ToArray();
-                z = _spectrumViewModel.Intensities2D;
+                var length = spectrum.Length;
+                for (int j = 0; j < spectrum.Length; j++)
+                {
+                    z[i,j] = spectrum[j];
+                }
+                i += 1;
             }
 
             var plt = _chromatogramPlot.Plot;
@@ -386,6 +394,7 @@ namespace RawVision.Models
             hm.Smooth = false;
             hm.FlipRows = true;
             hm.Extent = new CoordinateRect(x.Min(),x.Max(),y.Min(),y.Max());
+            hm.ManualRange = new Range(PlotSettings.Instance.Chromatogram.ColorMin, PlotSettings.Instance.Chromatogram.ColorMax);
 
             if (_colorbar == null)
             {
@@ -416,17 +425,18 @@ namespace RawVision.Models
             double[] y;
             double[,] z;
 
-            if (PlotSettings.Instance.MassRangeLimitEnabled)
+            x = _chromatogramViewModel.Times;
+            y = _spectrumViewModel.UniqueMasses.ToArray();
+
+            int i = 0;
+            z = new double[y.Length, x.Length];
+            foreach (var spectrum in _spectrumViewModel.Log10IntensityList)
             {
-                x = _chromatogramViewModel.Times;
-                y = _spectrumViewModel.SlicedUniqueMasses.ToArray(); // TODO: swap with XIC?
-                z = _spectrumViewModel.SlicedLog10Intensities2D;
-            }
-            else
-            {
-                x = _chromatogramViewModel.Times;
-                y = _spectrumViewModel.UniqueMasses.ToArray();
-                z = _spectrumViewModel.Log10Intensities2D;
+                for (int j = 0; j < spectrum.Length; j++)
+                {
+                    z[i,j] = spectrum[j];
+                }
+                i += 1;
             }
 
             var plt = _chromatogramPlot.Plot;
@@ -438,6 +448,14 @@ namespace RawVision.Models
             hm.Smooth = false;
             hm.FlipRows = true;
             hm.Extent = new CoordinateRect(x.Min(), x.Max(), y.Min(), y.Max());
+
+            double hmRangeMin = PlotSettings.Instance.Chromatogram.ColorMin <= 0
+                ? 0
+                : Math.Log10(PlotSettings.Instance.Chromatogram.ColorMin);
+            double hmRangeMax = PlotSettings.Instance.Chromatogram.ColorMin <= 0
+                ? 0
+                : Math.Log10(PlotSettings.Instance.Chromatogram.ColorMax);
+            hm.ManualRange = new Range(hmRangeMin, hmRangeMax);
 
             if (_colorbar == null)
             {
@@ -587,6 +605,13 @@ namespace RawVision.Models
             SetManualLimits("Y");
         }
 
+        private void ResetScalingColor()
+        {
+            PlotSettings.Instance.Chromatogram.ColorMin = _spectrumViewModel.minIntensity;
+            PlotSettings.Instance.Chromatogram.ColorMax = _spectrumViewModel.maxIntensity;
+            SetManualLimits("Color");
+        }
+
         private void SetManualLimits(string axis)
         {
             if (axis == "X")
@@ -621,6 +646,12 @@ namespace RawVision.Models
                     _chromatogramPlot.Plot.GetPlottables()
                         .FirstOrDefault(hm => hm.ToString().Contains("Heatmap"))
                         as Heatmap;
+
+                if (hm == null)
+                {
+                    return;
+                }
+
                 hm.ManualRange = new Range(PlotSettings.Instance.Chromatogram.ColorMin,
                     PlotSettings.Instance.Chromatogram.ColorMax);
                 _chromatogramPlot.Refresh();

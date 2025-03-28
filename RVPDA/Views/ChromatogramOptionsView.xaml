@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:RVPDA.Views"
         mc:Ignorable="d"
-        Title="Plot Options" Height="430" Width="257" ResizeMode="CanMinimize">
+        Title="Plot Options" Height="440" Width="257" ResizeMode="CanMinimize">
 
     <ScrollViewer>
         <StackPanel>
@@ -117,8 +117,11 @@
 
             <Rectangle Margin="5 " Fill="LightGray" Height="3"></Rectangle>
 
-            <TextBlock Text="Color Axis Limits" HorizontalAlignment="Center" Margin="5 0 5 2"></TextBlock>
-            <Grid HorizontalAlignment="Center">
+            <Grid HorizontalAlignment="Left" Margin="5 0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
@@ -126,10 +129,37 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <TextBlock Text="Min:" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Margin="5"/>
-                <TextBox Name="ColorMin" Grid.Row="0" Grid.Column="1" Width="60" Margin="5" KeyDown="EntryBox_KeyDown" LostFocus="EntryBox_LostFocus"/>
-                <TextBlock Text="Max:" Grid.Row="0" Grid.Column="2" VerticalAlignment="Center" Margin="5" HorizontalAlignment="Left"/>
-                <TextBox Name="ColorMax" Grid.Row="0" Grid.Column="3" Width="60" Margin="5" KeyDown="EntryBox_KeyDown" LostFocus="EntryBox_LostFocus"/>
+                <TextBlock Text="Color Axis Limits:" Grid.Row="0" Grid.Column="0" Margin="5" Grid.ColumnSpan="2"/>
+                <Button Name="AutoColorButton" Grid.Row="0" Grid.Column="2" Content="   Autoscale Color   " Click="OnClick_AutoColor" Height="20" HorizontalAlignment="Right" Grid.ColumnSpan="2">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Background" Value="RoyalBlue"/>
+                            <Setter Property="Foreground" Value="White"/>
+                            <Setter Property="FontWeight" Value="Bold"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="{TemplateBinding Background}" BorderThickness="1" BorderBrush="Black" CornerRadius="5">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                            <Style.Triggers>
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter Property="Background" Value="DarkBlue"/>
+                                    <Setter Property="Foreground" Value="Gray"/>
+                                    <Setter Property="FontWeight" Value="Bold"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+
+                <TextBlock Text="Min:" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Margin="5"/>
+                <TextBox Name="ColorMin" Grid.Row="1" Grid.Column="1" Width="60" Margin="5" KeyDown="EntryBox_KeyDown" LostFocus="EntryBox_LostFocus"/>
+                <TextBlock Text="Max:" Grid.Row="1" Grid.Column="2" VerticalAlignment="Center" Margin="5" HorizontalAlignment="Left"/>
+                <TextBox Name="ColorMax" Grid.Row="1" Grid.Column="3" Width="60" Margin="5" KeyDown="EntryBox_KeyDown" LostFocus="EntryBox_LostFocus"/>
 
             </Grid>
 

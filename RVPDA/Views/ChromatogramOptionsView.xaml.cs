@@ -67,8 +67,19 @@ namespace RVPDA.Views
             VLine.IsChecked = PlotSettings.Instance.Chromatogram.VLineEnabled;
             PlotGrid.IsChecked = PlotSettings.Instance.Chromatogram.GridEnabled;
             ScrollEnabled.IsChecked = PlotSettings.Instance.Chromatogram.MouseEventsEnabled;
-            ColorMax.Text = PlotSettings.Instance.Chromatogram.ColorMax.ToString() == "NaN" ? "" : PlotSettings.Instance.Chromatogram.ColorMax.ToString();
-            ColorMin.Text = PlotSettings.Instance.Chromatogram.ColorMin.ToString() == "NaN" ? "" : PlotSettings.Instance.Chromatogram.ColorMin.ToString();
+            if (PlotSettings.Instance.Chromatogram.MapScaling == "Linear")
+            {
+                ColorMax.Text = PlotSettings.Instance.Chromatogram.ColorMax.ToString() == "NaN" ? "" : PlotSettings.Instance.Chromatogram.ColorMax.ToString();
+                ColorMin.Text = PlotSettings.Instance.Chromatogram.ColorMin.ToString() == "NaN" ? "" : PlotSettings.Instance.Chromatogram.ColorMin.ToString();
+            }
+            else
+            {
+                string minVal = PlotSettings.Instance.Chromatogram.ColorMin <= 0 ? "0" : Math.Round(Math.Log10(PlotSettings.Instance.Chromatogram.ColorMin), 2).ToString();
+                string maxVal = PlotSettings.Instance.Chromatogram.ColorMax <= 0 ? "0" : Math.Round(Math.Log10(PlotSettings.Instance.Chromatogram.ColorMax), 2).ToString();
+                ColorMax.Text = maxVal;
+                ColorMin.Text = minVal;
+            }
+
         }
 
         private void OnClick_SaveSettings(object sender, RoutedEventArgs e)
@@ -107,6 +118,13 @@ namespace RVPDA.Views
             PlotSettings.Instance.Chromatogram.AutoScaleY += 1;
             YMin.Text = Math.Round(PlotSettings.Instance.Chromatogram.YMin, 2).ToString();
             YMax.Text = Math.Round(PlotSettings.Instance.Chromatogram.YMax, 2).ToString();
+        }
+
+        private void OnClick_AutoColor(object sender, RoutedEventArgs e)
+        {
+            PlotSettings.Instance.Chromatogram.AutoScaleColor += 1;
+            ColorMin.Text = Math.Round(PlotSettings.Instance.Chromatogram.DefaultMinColorValue, 2).ToString();
+            ColorMax.Text = Math.Round(PlotSettings.Instance.Chromatogram.DefaultMaxColorValue, 2).ToString();
         }
 
         private void OnChecked_ShowVLine(object sender, RoutedEventArgs e)

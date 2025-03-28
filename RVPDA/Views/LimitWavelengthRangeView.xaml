@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:RVPDA.Views"
         mc:Ignorable="d"
-        Title="Limit Mass Range" Height="270" Width="300">
+        Title="Limit Mass Range" Height="300" Width="310">
 
     <StackPanel>
         <TextBlock Text="Limit Wavelength Range?" FontSize="16" HorizontalAlignment="Center" Margin="5 5 5 0"></TextBlock>
@@ -33,9 +33,9 @@ Any existing color limit settings will be autoscaled to fit the sliced data.
             <TextBox Name="MassMax" Grid.Row="3" Grid.Column="3" Width="60" Margin="5 5 5 10" KeyDown="EntryBox_KeyDown" LostFocus="EntryBox_LostFocus"/>
         </Grid>
 
-        <Button Content="Close Window and Apply Changes" Click="OnClick_CloseWindow" Margin="20 10"/>
+        <Button Content="Close Window and Apply Changes" Click="OnClick_CloseAndApplyRange" Width="222"  Margin="0 0 0 3"/>
 
-        <Button Content="Close Window Without Saving" Click="OnClick_CloseWindow" Margin="20 0 20 7"/>
+        <Button Content="Close Window and Show Full Range" Click="OnClick_CloseAndAutoscale" Width="222" Margin="0 0 0 0"/>
 
     </StackPanel>
 </Window>
