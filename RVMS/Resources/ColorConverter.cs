@@ -4,7 +4,7 @@ using System.Windows.Data;
 using System.Windows.Media;
 using DrawingColor = System.Drawing.Color;
 
-namespace RawVision.Resources
+namespace RVMS.Resources
 {
     public class ColorConverter : IValueConverter
     {

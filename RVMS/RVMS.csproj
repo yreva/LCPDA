@@ -1,39 +1,52 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-	  <OutputType>WinExe</OutputType>
-	  <TargetFramework>net8.0-windows</TargetFramework>
-	  <Nullable>enable</Nullable>
-	  <ImplicitUsings>enable</ImplicitUsings>
-	  <UseWPF>true</UseWPF>
-	  <ApplicationIcon>rawvision_icon.ico</ApplicationIcon>
-	  <AssemblyName>RawVisionMS</AssemblyName>
-	  <BaseOutputPath>..\RawVisionBuild</BaseOutputPath>
+      <OutputType>WinExe</OutputType>
+      <TargetFramework>net8.0-windows</TargetFramework>
 	  <RestorePackagesPath>..\RawVisionBuild\SharedPackages</RestorePackagesPath>
+      <Nullable>enable</Nullable>
+      <ImplicitUsings>enable</ImplicitUsings>
+      <UseWPF>true</UseWPF>
+      <ApplicationIcon>Resources\Images\rawvision_pda.ico</ApplicationIcon>
+      <AssemblyName>RawVisionPDA</AssemblyName>
+      <BaseOutputPath>..\RawVisionBuild</BaseOutputPath>
 	  <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
 
-<ItemGroup>
-    <Content Include="\Resources\Images\*.png">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-</ItemGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DebugType>embedded</DebugType>
+  </PropertyGroup>
 
-<ItemGroup>
-  <None Remove="Resources\Images\colormap_grayscale.png" />
-  <None Remove="Resources\Images\colormap_ice.png" />
-  <None Remove="Resources\Images\colormap_inferno.png" />
-  <None Remove="Resources\Images\colormap_plasma.png" />
-  <None Remove="Resources\Images\colormap_solar.png" />
-  <None Remove="Resources\Images\colormap_thermal.png" />
-  <None Remove="Resources\Images\colormap_turbo.png" />
-  <None Remove="Resources\Images\colormap_viridis.png" />
-  <None Remove="Resources\Images\daltonian_wide_small.png" />
-  <None Remove="Resources\Images\rawvision.png" />
-</ItemGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DebugType>embedded</DebugType>
+  </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="rawvision_icon.ico" />
+    <Content Include="Resources\Images\rawvision_pda.ico" />
+  </ItemGroup>
+
+<ItemGroup>
+	<Reference Include="ThermoFisher.CommonCore.BackgroundSubtraction">
+		<HintPath>lib\ThermoFisher.CommonCore.BackgroundSubtraction.dll</HintPath>
+	</Reference>
+	<Reference Include="ThermoFisher.CommonCore.Data">
+		<HintPath>lib\ThermoFisher.CommonCore.Data.dll</HintPath>
+	</Reference>
+	<Reference Include="ThermoFisher.CommonCore.MassPrecisionEstimator">
+		<HintPath>lib\ThermoFisher.CommonCore.MassPrecisionEstimator.dll</HintPath>
+	</Reference>
+	<Reference Include="ThermoFisher.CommonCore.RawFileReader">
+		<HintPath>lib\ThermoFisher.CommonCore.RawFileReader.dll</HintPath>
+	</Reference>
+</ItemGroup>
+	
+
+	<ItemGroup>
+    <PackageReference Include="ScottPlot" Version="5.0.54" />
+    <PackageReference Include="ScottPlot.WPF" Version="5.0.54" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Resource Include="Resources\Images\colormap_algae.png" />
     <Resource Include="Resources\Images\colormap_blues.png" />
     <Resource Include="Resources\Images\colormap_deep.png" />
@@ -51,37 +64,24 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="ThermoFisher.CommonCore.BackgroundSubtraction">
-      <HintPath>lib\ThermoFisher.CommonCore.BackgroundSubtraction.dll</HintPath>
-    </Reference>
-    <Reference Include="ThermoFisher.CommonCore.Data">
-      <HintPath>lib\ThermoFisher.CommonCore.Data.dll</HintPath>
-    </Reference>
-    <Reference Include="ThermoFisher.CommonCore.MassPrecisionEstimator">
-      <HintPath>lib\ThermoFisher.CommonCore.MassPrecisionEstimator.dll</HintPath>
-    </Reference>
-    <Reference Include="ThermoFisher.CommonCore.RawFileReader">
-      <HintPath>lib\ThermoFisher.CommonCore.RawFileReader.dll</HintPath>
-    </Reference>
-    <EmbeddedResource Include="Resources\rawvision.ico" />
+    <Compile Update="Views\About.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Views\ChromatogramOptionsView.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Views\ColormapSettingsDialogue.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Views\LimitWavelengthRangeView.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Views\PeakListWindow.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Views\SpectrumOptionsView.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="ScottPlot" Version="5.0.54" />
-    <PackageReference Include="ScottPlot.WPF" Version="5.0.54" />
-  </ItemGroup>
-
-<Target Name="MoveDependencies" AfterTargets="Build">
-		<ItemGroup>
-			<!-- Select all files in the output directory except the EXE -->
-			<DependenciesToMove Include="bin\$(Configuration)\*.*" Exclude="bin\$(Configuration)\$(AssemblyName).exe" />
-		</ItemGroup>
-
-		<!-- Create the libs directory -->
-		<MakeDir Directories="bin\$(Configuration)\libs" Condition="!Exists('bin\$(Configuration)\libs')" />
-
-		<!-- Move dependencies to the libs directory -->
-		<Move SourceFiles="@(DependenciesToMove)" DestinationFolder="bin\$(Configuration)\libs" />
-	</Target>
 
 </Project>

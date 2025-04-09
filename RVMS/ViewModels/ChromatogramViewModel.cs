@@ -2,10 +2,11 @@
 using System.ComponentModel;
 using System.Formats.Tar;
 using System.Windows;
+using ScottPlot;
 using ThermoFisher.CommonCore.Data.Business;
 using ThermoFisher.CommonCore.Data.Interfaces;
 
-namespace RawVision.ViewModels
+namespace RVMS.ViewModels
 {
     public class ChromatogramViewModel : INotifyPropertyChanged
     {

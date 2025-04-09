@@ -93,6 +93,11 @@ namespace RVPDA
                 OnPropertyChanged(nameof(WavelengthRangeMaximum));
             }
         }
+
+        public void ResetOnNewClick()
+        {
+            _scanNumber = 1;
+        }
     }
 
     public class ChromatogramSettings : BaseSettings
@@ -243,6 +248,23 @@ namespace RVPDA
         {
             get { return _lineColor; }
             set => SetProperty(ref _lineColor, value, nameof(LineColor));
+        }
+
+        public void ResetColorLimit_NoNotify()
+        {
+            string scalingMethod = PlotSettings.Instance.Chromatogram.MapScaling;
+
+            if (scalingMethod == "Linear")
+            {
+                _colorMin = DefaultMinColorValue;
+                _colorMax = DefaultMaxColorValue;
+                return;
+            }
+            else if (scalingMethod == "Log10")
+            {
+                _colorMin = DefaultMinColorValue <= 0 ? 0 : Math.Log10(DefaultMinColorValue*1e6);
+                _colorMax = DefaultMaxColorValue <= 0 ? 0 : Math.Log10(DefaultMaxColorValue*1e6);
+            }
         }
 
     }

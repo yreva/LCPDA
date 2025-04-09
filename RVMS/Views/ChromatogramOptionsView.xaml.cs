@@ -14,12 +14,12 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
-using RawVision.ViewModels;
+using RVMS.ViewModels;
 using ScottPlot;
 using ScottPlot.DataViews;
 using Color = System.Drawing.Color;
 
-namespace RawVision.Views
+namespace RVMS.Views
 {
     /// <summary>
     /// Interaction logic for ChromatogramOptionsView.xaml
@@ -45,41 +45,42 @@ namespace RawVision.Views
         {
             InitializeComponent();
             LoadColors();
-            previous_AutoX = PlotSettings.Instance.Chromatogram.AutoScaleX;
-            previous_AutoY = PlotSettings.Instance.Chromatogram.AutoScaleY;
-            previous_XMin = PlotSettings.Instance.Chromatogram.XMin;
-            previous_XMax = PlotSettings.Instance.Chromatogram.XMax;
-            previous_YMin = PlotSettings.Instance.Chromatogram.YMin;
-            previous_YMax = PlotSettings.Instance.Chromatogram.YMax;
-            previous_Color = PlotSettings.Instance.Chromatogram.LineColor;
-            previous_Vline = PlotSettings.Instance.Chromatogram.VLineEnabled;
-            previous_PlotGrid = PlotSettings.Instance.Chromatogram.GridEnabled;
-            previous_ScrollEnabled = PlotSettings.Instance.Chromatogram.MouseEventsEnabled;
-            previous_ColorMin = PlotSettings.Instance.Chromatogram.ColorMin;
-            previous_ColorMax = PlotSettings.Instance.Chromatogram.ColorMax;
+            var CS = PlotSettings.Instance.Chromatogram;
+            previous_AutoX = CS.AutoScaleX;
+            previous_AutoY = CS.AutoScaleY;
+            previous_XMin = CS.XMin;
+            previous_XMax = CS.XMax;
+            previous_YMin = CS.YMin;
+            previous_YMax = CS.YMax;
+            previous_Color = CS.LineColor;
+            previous_Vline = CS.VLineEnabled;
+            previous_PlotGrid = CS.GridEnabled;
+            previous_ScrollEnabled = CS.MouseEventsEnabled;
+            previous_ColorMin = CS.ColorMin;
+            previous_ColorMax = CS.ColorMax;
 
 
             XMin.Text = Math.Round(previous_XMin,2).ToString();
             YMin.Text = Math.Round(previous_YMin,2).ToString();
             XMax.Text = Math.Round(previous_XMax,2).ToString();
             YMax.Text = Math.Round(previous_YMax,2).ToString();
-            ColorComboBox.SelectedItem = PlotSettings.Instance.Chromatogram.LineColor;
-            VLine.IsChecked = PlotSettings.Instance.Chromatogram.VLineEnabled;
-            PlotGrid.IsChecked = PlotSettings.Instance.Chromatogram.GridEnabled;
-            ScrollEnabled.IsChecked = PlotSettings.Instance.Chromatogram.MouseEventsEnabled;
-            if (PlotSettings.Instance.Chromatogram.MapScaling == "Linear")
+            ColorComboBox.SelectedItem = CS.LineColor;
+            VLine.IsChecked = CS.VLineEnabled;
+            PlotGrid.IsChecked = CS.GridEnabled;
+            ScrollEnabled.IsChecked = CS.MouseEventsEnabled;
+            if (CS.MapScaling == "Linear")
             {
-                ColorMax.Text = PlotSettings.Instance.Chromatogram.ColorMax.ToString() == "NaN" ? "" : PlotSettings.Instance.Chromatogram.ColorMax.ToString();
-                ColorMin.Text = PlotSettings.Instance.Chromatogram.ColorMin.ToString() == "NaN" ? "" : PlotSettings.Instance.Chromatogram.ColorMin.ToString();
+                ColorMax.Text = CS.ColorMax.ToString() == "NaN" ? "" : CS.ColorMax.ToString();
+                ColorMin.Text = CS.ColorMin.ToString() == "NaN" ? "" : CS.ColorMin.ToString();
             }
             else
             {
-                string minVal = PlotSettings.Instance.Chromatogram.ColorMin <= 0 ? "0" : Math.Round(Math.Log10(PlotSettings.Instance.Chromatogram.ColorMin),2).ToString();
-                string maxVal = PlotSettings.Instance.Chromatogram.ColorMax <= 0 ? "0" : Math.Round(Math.Log10(PlotSettings.Instance.Chromatogram.ColorMax),2).ToString();
+                string minVal = CS.ColorMin <= 0 ? "0" : Math.Round(CS.ColorMin, 2).ToString();
+                string maxVal = CS.ColorMax <= 0 ? "0" : Math.Round(CS.ColorMax, 2).ToString();
                 ColorMax.Text = maxVal;
                 ColorMin.Text = minVal;
             }
-            
+
         }
 
         private void OnClick_SaveSettings(object sender, RoutedEventArgs e)
@@ -123,8 +124,8 @@ namespace RawVision.Views
         private void OnClick_AutoColor(object sender, RoutedEventArgs e)
         {
             PlotSettings.Instance.Chromatogram.AutoScaleColor += 1;
-            ColorMin.Text = Math.Round(PlotSettings.Instance.Chromatogram.DefaultMinColorValue, 2).ToString();
-            ColorMax.Text = Math.Round(PlotSettings.Instance.Chromatogram.DefaultMaxColorValue, 2).ToString();
+            ColorMin.Text = Math.Round(PlotSettings.Instance.Chromatogram.ColorMin, 2).ToString();
+            ColorMax.Text = Math.Round(PlotSettings.Instance.Chromatogram.ColorMax, 2).ToString();
         }
 
         private void OnChecked_ShowVLine(object sender, RoutedEventArgs e)
@@ -246,6 +247,45 @@ namespace RawVision.Views
                         PlotSettings.Instance.Chromatogram.ColorMax = newValue;
                         break;
                 }
+            }
+        }
+
+
+        public void CheckValuesUpdatedExternally()
+        {
+            previous_AutoX = PlotSettings.Instance.Chromatogram.AutoScaleX;
+            previous_AutoY = PlotSettings.Instance.Chromatogram.AutoScaleY;
+            previous_XMin = PlotSettings.Instance.Chromatogram.XMin;
+            previous_XMax = PlotSettings.Instance.Chromatogram.XMax;
+            previous_YMin = PlotSettings.Instance.Chromatogram.YMin;
+            previous_YMax = PlotSettings.Instance.Chromatogram.YMax;
+            previous_Color = PlotSettings.Instance.Chromatogram.LineColor;
+            previous_Vline = PlotSettings.Instance.Chromatogram.VLineEnabled;
+            previous_PlotGrid = PlotSettings.Instance.Chromatogram.GridEnabled;
+            previous_ScrollEnabled = PlotSettings.Instance.Chromatogram.MouseEventsEnabled;
+            previous_ColorMin = PlotSettings.Instance.Chromatogram.ColorMin;
+            previous_ColorMax = PlotSettings.Instance.Chromatogram.ColorMax;
+
+
+            XMin.Text = Math.Round(previous_XMin, 2).ToString();
+            YMin.Text = Math.Round(previous_YMin, 2).ToString();
+            XMax.Text = Math.Round(previous_XMax, 2).ToString();
+            YMax.Text = Math.Round(previous_YMax, 2).ToString();
+            ColorComboBox.SelectedItem = PlotSettings.Instance.Chromatogram.LineColor;
+            VLine.IsChecked = PlotSettings.Instance.Chromatogram.VLineEnabled;
+            PlotGrid.IsChecked = PlotSettings.Instance.Chromatogram.GridEnabled;
+            ScrollEnabled.IsChecked = PlotSettings.Instance.Chromatogram.MouseEventsEnabled;
+            if (PlotSettings.Instance.Chromatogram.MapScaling == "Linear")
+            {
+                ColorMax.Text = PlotSettings.Instance.Chromatogram.ColorMax.ToString() == "NaN" ? "" : Math.Round(PlotSettings.Instance.Chromatogram.ColorMax, 2).ToString();
+                ColorMin.Text = PlotSettings.Instance.Chromatogram.ColorMin.ToString() == "NaN" ? "" : Math.Round(PlotSettings.Instance.Chromatogram.ColorMin, 2).ToString();
+            }
+            else
+            {
+                string minVal = PlotSettings.Instance.Chromatogram.ColorMin <= 0 ? "0" : Math.Round(PlotSettings.Instance.Chromatogram.ColorMin, 2).ToString();
+                string maxVal = PlotSettings.Instance.Chromatogram.ColorMax <= 0 ? "0" : Math.Round(PlotSettings.Instance.Chromatogram.ColorMax, 2).ToString();
+                ColorMax.Text = maxVal;
+                ColorMin.Text = minVal;
             }
         }
     }

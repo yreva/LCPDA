@@ -69,6 +69,27 @@ namespace RVPDA.Models
             // selected instrument to the MS instrument, first instance of it
             Console.WriteLine("The RAW file has data from {0} instruments" + rawFile.InstrumentCount);
 
+            int instrumentCount = rawFile.InstrumentCount;
+            bool containsPda = false;
+            int indexOfPda = -1;
+
+            for (int i = 0; i < instrumentCount; i++)
+            {
+                var instrumentType = rawFile.GetInstrumentType(i);
+                if (instrumentType == Device.Pda)
+                {
+                    containsPda = true;
+                    indexOfPda = i;
+                    break;
+                }
+            }
+
+            if (!containsPda)
+            {
+                MessageBox.Show("File does not appear to contain PDA data.", "File Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return 0;
+            }
+
             rawFile.SelectInstrument(Device.Pda,1);
 
             // Get the first and last scan from the RAW file
@@ -187,7 +208,7 @@ namespace RVPDA.Models
             return (column1, column2);
         }
 
-        public void WriteDataToCsv(double[] masses, double[] times, double[,] intensity)
+        public void WriteDataToCsv(double[] masses, double[] times, double[][] intensity)
         {
             if (masses == null)
             {
@@ -210,7 +231,7 @@ namespace RVPDA.Models
                     string[] rowValues = new string[cols];
                     for (int k = 0; k < cols; k++)
                     {
-                        rowValues[k] = intensity[j, k].ToString();
+                        rowValues[k] = intensity[j][k].ToString();
                     }
                     writer.WriteLine(string.Join(",", rowValues));
                 }

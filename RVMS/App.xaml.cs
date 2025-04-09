@@ -2,7 +2,7 @@
 using System.Data;
 using System.Windows;
 
-namespace RawVision
+namespace RVMS
 {
     /// <summary>
     /// Interaction logic for App.xaml

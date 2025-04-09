@@ -1,26 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing.Imaging;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Xml.Linq;
-using Microsoft.VisualBasic;
-using RawVision.ViewModels;
-using RawVision.Views;
+using RVMS.ViewModels;
+using RVMS.Views;
 using ScottPlot;
-using ScottPlot.Colormaps;
-using ScottPlot.Panels;
 using ScottPlot.Plottables;
 using ScottPlot.WPF;
 using Range = ScottPlot.Range;
 
-namespace RawVision.Models
+namespace RVMS.Models
 {
     /*------------------------------------------------------------------------------------------------------------
      *                                                 PlotModel                                                 *
@@ -49,13 +40,13 @@ namespace RawVision.Models
             {
                 case "ScanNumber":
                     CheckValidScanNumber();
-                    PlotMassSpectrum();
+                    PlotSpectrum();
+                    //PlotSpectrumNewScanNumber();
                     ResetVlineOnChomatogram();
                     break;
 
-                case "MassRangeLimitEnabled":
-                    _spectrumViewModel.TrimDataToMassRange();
-                    TrimmedDataChanged();
+                case "WavelengthRangeLimitEnabled":
+                    WavelengthRangeSettingChanged();
                     break;
 
             }
@@ -71,6 +62,7 @@ namespace RawVision.Models
                     break;
                 case "AutoScaleY":
                     ResetScalingY(true);
+                    _chromatogramPlot.Refresh();
                     break;
 
                 case "AutoScaleColor":
@@ -134,13 +126,8 @@ namespace RawVision.Models
                     SetSpectrumManualLimits("Y");
                     break;
 
-                case "ColorMin":
-                case "ColorMax":
-                    SetSpectrumManualLimits("Color");
-                    break;
-
-                case "BarColor":
-                    ResetBarColor();
+                case "LineColor":
+                    ResetSpectrumColor();
                     break;
 
                 case "GridEnabled":
@@ -154,6 +141,14 @@ namespace RawVision.Models
                 case "HoldManualLimits":
                     SetSpectrumManualLimits("X");
                     SetSpectrumManualLimits("Y");
+                    break;
+
+                case "ShowImportedSpectrum":
+                    ImportedSpectrumVisibilityChanged();
+                    break;
+
+                case "ImportedSpectrumScaler":
+                    PlotImportedSpectrum(PlotSettings.Instance.Spectrum.GetImportedSpectrumPath());
                     break;
 
             }
@@ -192,7 +187,7 @@ namespace RawVision.Models
             PlotSettings.Instance.Chromatogram.PropertyChanged += PlotSettings_ChromatogramPropertyChanged;
             PlotSettings.Instance.Spectrum.PropertyChanged += PlotSettings_SpectrumPropertyChanged;
 
-            SetColormapByName("Ice", false);
+            SetColormapByName("Ice", true);
 
             // subscribe to plot events
             _chromatogramPlot.MouseDown += ChromPlot_MouseDown;
@@ -253,8 +248,8 @@ namespace RawVision.Models
             {
                 if (_hasMouseBeenDisabled)
                 {
-                    _chromatogramPlot.PreviewMouseWheel -= _chromatogramPlot_PreviewMouseWheel;
-                    _chromatogramPlot.PreviewMouseDown -= _chromatogramPlot_PreviewMouseDown;
+                    _chromatogramPlot.PreviewMouseWheel -= Plot_PreviewMouseWheel;
+                    _chromatogramPlot.PreviewMouseDown -= Plot_PreviewMouseDown;
                     _hasMouseBeenDisabled = false;
                     return;
                 }
@@ -262,8 +257,8 @@ namespace RawVision.Models
             else
             {
                 _hasMouseBeenDisabled = true;
-                _chromatogramPlot.PreviewMouseWheel += _chromatogramPlot_PreviewMouseWheel;
-                _chromatogramPlot.PreviewMouseDown += _chromatogramPlot_PreviewMouseDown;
+                _chromatogramPlot.PreviewMouseWheel += Plot_PreviewMouseWheel;
+                _chromatogramPlot.PreviewMouseDown += Plot_PreviewMouseDown;
             }
         }
 
@@ -274,8 +269,8 @@ namespace RawVision.Models
             {
                 if (_hasMouseBeenDisabled)
                 {
-                    _spectrumPlot.PreviewMouseWheel -= _chromatogramPlot_PreviewMouseWheel;
-                    _spectrumPlot.PreviewMouseDown -= _chromatogramPlot_PreviewMouseDown;
+                    _spectrumPlot.PreviewMouseWheel -= Plot_PreviewMouseWheel;
+                    _spectrumPlot.PreviewMouseDown -= Plot_PreviewMouseDown;
                     _hasMouseBeenDisabledForSpectrum = false;
                     return;
                 }
@@ -283,13 +278,19 @@ namespace RawVision.Models
             else
             {
                 _hasMouseBeenDisabledForSpectrum = true;
-                _spectrumPlot.PreviewMouseWheel += _chromatogramPlot_PreviewMouseWheel;
-                _spectrumPlot.PreviewMouseDown += _chromatogramPlot_PreviewMouseDown;
+                _spectrumPlot.PreviewMouseWheel += Plot_PreviewMouseWheel;
+                _spectrumPlot.PreviewMouseDown += Plot_PreviewMouseDown;
             }
         }
 
         private void ResetLineColor()
         {
+            // exit if 2D chromatogram is active
+            if (PlotSettings.Instance.Chromatogram.Style != "Line")
+            {
+                return;
+            }
+
             var plots = _chromatogramPlot.Plot.GetPlottables();
 
             if (plots.Count() == 0)
@@ -302,7 +303,7 @@ namespace RawVision.Models
             _chromatogramPlot.Refresh();
         }
 
-        private void ResetBarColor()
+        private void ResetSpectrumColor()
         {
             var plots = _spectrumPlot.Plot.GetPlottables();
 
@@ -311,8 +312,8 @@ namespace RawVision.Models
                 return;
             }
 
-            var line = plots.FirstOrDefault(plt => plt.ToString().Contains("Bar")) as ScottPlot.Plottables.BarPlot;
-            line.Color = PlotSettings.Instance.Spectrum.BarColor;
+            var line = plots.FirstOrDefault(plt => plt.ToString().Contains("Scatter")) as ScottPlot.Plottables.Scatter;
+            line.Color = PlotSettings.Instance.Spectrum.LineColor;
             _spectrumPlot.Refresh();
         }
 
@@ -355,35 +356,34 @@ namespace RawVision.Models
         {
             if (PlotSettings.Instance.Chromatogram.MapScaling == "Linear")
             {
-                PlotLinearMzMap();
+                PlotLinearAbsorbanceMap();
             }
 
             else if (PlotSettings.Instance.Chromatogram.MapScaling == "Log10")
             {
-                PlotLog10MzMap();
+                PlotLog10AbsorbanceMap();
             }
         }
-
-        private void PlotLinearMzMap()
+        private void PlotLinearAbsorbanceMap()
         {
             double[] x;
             double[] y;
             double[,] z;
 
             x = _chromatogramViewModel.Times;
-            y = _spectrumViewModel.UniqueMasses.ToArray();
+            y = _spectrumViewModel.CombinedMasses;
 
             int i = 0;
-            z = new double[y.Length, x.Length];
-            foreach (var spectrum in _spectrumViewModel.IntensityList)
+            z = new double[y.Length,x.Length];
+            foreach (var spectrum in _spectrumViewModel.Intensity2D)
             {
-                var length = spectrum.Length;
                 for (int j = 0; j < spectrum.Length; j++)
                 {
-                    z[i,j] = spectrum[j];
+                    z[j,i] = spectrum[j];
                 }
                 i += 1;
             }
+            //z = _spectrumViewModel.Intensity;
 
             var plt = _chromatogramPlot.Plot;
             plt.Clear();
@@ -392,9 +392,10 @@ namespace RawVision.Models
 
             hm.Colormap = Colormap;
             hm.Smooth = false;
-            hm.FlipRows = true;
+            hm.FlipVertically = true;
             hm.Extent = new CoordinateRect(x.Min(),x.Max(),y.Min(),y.Max());
             hm.ManualRange = new Range(PlotSettings.Instance.Chromatogram.ColorMin, PlotSettings.Instance.Chromatogram.ColorMax);
+
 
             if (_colorbar == null)
             {
@@ -414,27 +415,26 @@ namespace RawVision.Models
 
 
             plt.XLabel("Retention Time / min");
-            plt.YLabel("m/z");
+            plt.YLabel("Wavelength / nm");
             plt.Axes.AutoScale();
 
             _chromatogramPlot.Refresh();
         }
-        private void PlotLog10MzMap()
+        private void PlotLog10AbsorbanceMap()
         {
             double[] x;
             double[] y;
             double[,] z;
 
             x = _chromatogramViewModel.Times;
-            y = _spectrumViewModel.UniqueMasses.ToArray();
-
+            y = _spectrumViewModel.CombinedMasses;
             int i = 0;
             z = new double[y.Length, x.Length];
-            foreach (var spectrum in _spectrumViewModel.Log10IntensityList)
+            foreach (var spectrum in _spectrumViewModel.Log10Intensity2D)
             {
                 for (int j = 0; j < spectrum.Length; j++)
                 {
-                    z[i,j] = spectrum[j];
+                    z[j,i] = spectrum[j];
                 }
                 i += 1;
             }
@@ -446,17 +446,24 @@ namespace RawVision.Models
 
             hm.Colormap = Colormap;
             hm.Smooth = false;
-            hm.FlipRows = true;
+            hm.FlipVertically = true;
             hm.Extent = new CoordinateRect(x.Min(), x.Max(), y.Min(), y.Max());
 
-            double hmRangeMin = PlotSettings.Instance.Chromatogram.ColorMin <= 0
-                ? 0
-                : Math.Log10(PlotSettings.Instance.Chromatogram.ColorMin);
-            double hmRangeMax = PlotSettings.Instance.Chromatogram.ColorMin <= 0
-                ? 0
-                : Math.Log10(PlotSettings.Instance.Chromatogram.ColorMax);
+            double hmRangeMin = PlotSettings.Instance.Chromatogram.ColorMin;
+            double hmRangeMax = PlotSettings.Instance.Chromatogram.ColorMax;
             hm.ManualRange = new Range(hmRangeMin, hmRangeMax);
 
+
+            // set manual color range if it has been set
+            //if (!double.IsNaN(PlotSettings.Instance.Chromatogram.ColorMin) &&
+            //    !double.IsNaN(PlotSettings.Instance.Chromatogram.ColorMax) &&
+            //    PlotSettings.Instance.Chromatogram.ColorMax > PlotSettings.Instance.Chromatogram.ColorMin)
+            //{
+            //    hm.ManualRange = new Range(PlotSettings.Instance.Chromatogram.ColorMin,
+            //        PlotSettings.Instance.Chromatogram.ColorMax);
+            //}
+
+            // add colorbar if it doesn't exist, else redirect its source
             if (_colorbar == null)
             {
                 _colorbar = plt.Add.ColorBar(hm);
@@ -466,68 +473,113 @@ namespace RawVision.Models
                 _colorbar.Source = hm;
             }
             _colorbar.IsVisible = true;
-            _colorbar.Label = "Log(Intensity)";
+            _colorbar.Label = "Log(I)";
 
-
+            // show vertical line for the scan being show in spectrum plot
             var vline = plt.Add.VerticalLine(_chromatogramViewModel.Times[PlotSettings.Instance.ScanNumber - 1]);
             vline.LineWidth = 1;
             vline.Color = ScottPlot.Color.FromHex("#0f0f0f");
-            vline.IsVisible = PlotSettings.Instance.Chromatogram.VLineEnabled;
+            vline.IsVisible = PlotSettings.Instance.Chromatogram.VLineEnabled; // hide the line if its visibility is disabled
 
-
+            // set labels and rescale axes
             plt.XLabel("Retention Time / min");
-            plt.YLabel("m/z");
+            plt.YLabel("Wavelength / nm");
             plt.Axes.AutoScale();
+            // TODO: implement HoldManualLimits for this plot as well. Updating things like the colormap rescale it?
 
 
             _chromatogramPlot.Refresh();
         }
-        public void PlotMassSpectrum()
+        public void PlotSpectrum()
         {
-            if (_spectrumViewModel.MZ.Count() == 0)
+            if (_spectrumViewModel.CombinedMasses.Count() == 0)
             {
                 return;
             }
 
-            var plt = _spectrumPlot.Plot;
+            var plot = _spectrumPlot.Plot.GetPlottables()
+                .OfType<BarPlot>() // Filters and casts only Scatter plots
+                .FirstOrDefault(plot => plot.LegendText == "RawData");
 
-            plt.Clear();
+            if (plot != null)
+            {
+                _spectrumPlot.Plot.Remove(plot);
+            }
 
             var idx = PlotSettings.Instance.ScanNumber;
 
             double[] x;
             double[] y;
 
-            if (PlotSettings.Instance.MassRangeLimitEnabled)
-            {
-                (x, y) = TrimDataToMassRange(_spectrumViewModel.MZ[PlotSettings.Instance.ScanNumber - 1], _spectrumViewModel.Intensity[PlotSettings.Instance.ScanNumber - 1]);
 
-            }
-            else
-            {
-                x = _spectrumViewModel.MZ[PlotSettings.Instance.ScanNumber - 1];
-                y = _spectrumViewModel.Intensity[PlotSettings.Instance.ScanNumber - 1];
-            }
+            x = _spectrumViewModel.MassesList[PlotSettings.Instance.ScanNumber - 1];
+            y = _spectrumViewModel.IntensityList[PlotSettings.Instance.ScanNumber - 1];
 
-            var bars = plt.Add.Bars(x, y);
-            bars.Color = PlotSettings.Instance.Spectrum.BarColor;
+            var bp = _spectrumPlot.Plot.Add.Bars(x, y);
+            bp.Color = PlotSettings.Instance.Spectrum.LineColor;
+            bp.Label = "RawData";
 
-            plt.XLabel("m/z");
-            plt.YLabel("Intensity");
+            _spectrumPlot.Plot.XLabel("m/z");
+            _spectrumPlot.Plot.YLabel("Intenisty");
 
             if (PlotSettings.Instance.Spectrum.HoldManualLimits)
             {
-                plt.Axes.SetLimits(PlotSettings.Instance.Spectrum.XMin,
+                _spectrumPlot.Plot.Axes.SetLimits(PlotSettings.Instance.Spectrum.XMin,
                     PlotSettings.Instance.Spectrum.XMax,
                     PlotSettings.Instance.Spectrum.YMin,
                     PlotSettings.Instance.Spectrum.YMax);
             }
             else
             {
-                plt.Axes.AutoScale();
+                _spectrumPlot.Plot.Axes.AutoScale();
             }
-            
-            plt.Axes.AntiAlias(true);
+
+            _spectrumPlot.Plot.Axes.AntiAlias(true);
+
+            _spectrumPlot.Refresh();
+        }
+
+        private void PlotSpectrumNewScanNumber()
+        {
+            if (_spectrumViewModel.CombinedMasses.Count() == 0)
+            {
+                return;
+            }
+
+            var plot = _spectrumPlot.Plot.GetPlottables()
+                .OfType<BarPlot>() // Filters and casts only Scatter plots
+                .FirstOrDefault(plot => plot.LegendText == "RawData");
+
+            if (plot != null)
+            {
+                _spectrumPlot.Plot.Remove(plot);
+            }
+
+            var idx = PlotSettings.Instance.ScanNumber;
+
+            double[] x = _spectrumViewModel.MassesList[PlotSettings.Instance.ScanNumber - 1];
+            double[] y = _spectrumViewModel.IntensityList[PlotSettings.Instance.ScanNumber - 1];
+
+            var bp = _spectrumPlot.Plot.Add.Bars(x, y);
+            bp.Color = PlotSettings.Instance.Spectrum.LineColor;
+            bp.LegendText = "RawData";
+
+            _spectrumPlot.Plot.XLabel("Wavelength / nm");
+            _spectrumPlot.Plot.YLabel("Absorbance");
+
+            if (PlotSettings.Instance.Spectrum.HoldManualLimits)
+            {
+                _spectrumPlot.Plot.Axes.SetLimits(PlotSettings.Instance.Spectrum.XMin,
+                    PlotSettings.Instance.Spectrum.XMax,
+                    PlotSettings.Instance.Spectrum.YMin,
+                    PlotSettings.Instance.Spectrum.YMax);
+            }
+            else
+            {
+                _spectrumPlot.Plot.Axes.AutoScale();
+            }
+
+            _spectrumPlot.Plot.Axes.AntiAlias(true);
 
             _spectrumPlot.Refresh();
         }
@@ -539,7 +591,7 @@ namespace RawVision.Models
 
         private void TrimmedDataChanged()
         {
-            PlotMassSpectrum();
+            PlotSpectrum();
 
             if (PlotSettings.Instance.Chromatogram.Style == "Map")
             {
@@ -607,8 +659,20 @@ namespace RawVision.Models
 
         private void ResetScalingColor()
         {
-            PlotSettings.Instance.Chromatogram.ColorMin = _spectrumViewModel.minIntensity;
-            PlotSettings.Instance.Chromatogram.ColorMax = _spectrumViewModel.maxIntensity;
+            string scalingMethod = PlotSettings.Instance.Chromatogram.MapScaling;
+            var CS = PlotSettings.Instance.Chromatogram;
+
+            if (scalingMethod == "Linear")
+            {
+                CS.ColorMin = CS.DefaultMinColorValue;
+                CS.ColorMax = CS.DefaultMaxColorValue;
+                return;
+            }
+            else if (scalingMethod == "Log10")
+            {
+                CS.ColorMin = CS.DefaultMinColorValue <= 0 ? 0 : Math.Log10(CS.DefaultMinColorValue * 1e6);
+                CS.ColorMax = CS.DefaultMaxColorValue <= 0 ? 0 : Math.Log10(CS.DefaultMaxColorValue * 1e6);
+            }
             SetManualLimits("Color");
         }
 
@@ -631,6 +695,11 @@ namespace RawVision.Models
 
             if (axis == "Color")
             {
+                if (PlotSettings.Instance.Chromatogram.Style != "Map")
+                {
+                    return;
+                }
+
                 if (double.IsNaN(PlotSettings.Instance.Chromatogram.ColorMin) ||
                     double.IsNaN(PlotSettings.Instance.Chromatogram.ColorMax))
                 {
@@ -647,13 +716,10 @@ namespace RawVision.Models
                         .FirstOrDefault(hm => hm.ToString().Contains("Heatmap"))
                         as Heatmap;
 
-                if (hm == null)
-                {
-                    return;
-                }
 
                 hm.ManualRange = new Range(PlotSettings.Instance.Chromatogram.ColorMin,
-                    PlotSettings.Instance.Chromatogram.ColorMax);
+                        PlotSettings.Instance.Chromatogram.ColorMax);
+
                 _chromatogramPlot.Refresh();
             }
         }
@@ -709,41 +775,113 @@ namespace RawVision.Models
             SetSpectrumManualLimits("Y");
         }
 
-        public (double[], double[]) TrimDataToMassRange(double[] xData, double[] yData)
+        private void WavelengthRangeSettingChanged()
         {
-            var min = PlotSettings.Instance.MassRangeMinimum;
-            var max = PlotSettings.Instance.MassRangeMaximum;
+            if (PlotSettings.Instance.WavelengthRangeLimitEnabled)
+            {
+                _spectrumViewModel.TrimDataToWavelengthRange();
+                if (PlotSettings.Instance.Chromatogram.Style == "Map")
+                {
+                    Plot2DChromatogram();
+                }
+            }
+            else
+            {
+                _spectrumViewModel.ResetWavelengthRange();
+                if (PlotSettings.Instance.Chromatogram.Style == "Map")
+                {
+                    Plot2DChromatogram();
+                }
+            }
+            PlotSpectrum();
+            CheckUpdateOptionsWindow();
+        }
 
-            // Get the indices of values between Min and Max
-            var indices = xData
-                .Select((value, index) => new { value, index })
-                .Where(pair => pair.value >= min && pair.value <= max)
-                .Select(pair => pair.index)
-                .ToArray();
+        private void CheckUpdateOptionsWindow()
+        {
+            foreach (Window window in Application.Current.Windows)
+            {
+                if (window is ChromatogramOptionsView chromatogramOptionsView)
+                {
+                    var limits = _chromatogramPlot.Plot.Axes.GetLimits();
+                    PlotSettings.Instance.Chromatogram.XMin = limits.XRange.Min;
+                    PlotSettings.Instance.Chromatogram.XMax = limits.XRange.Max;
+                    PlotSettings.Instance.Chromatogram.YMin = limits.YRange.Min;
+                    PlotSettings.Instance.Chromatogram.YMax = limits.YRange.Max;
+                    chromatogramOptionsView.CheckValuesUpdatedExternally();
+                }
+            }
+        }
 
+        public void PlotImportedSpectrum(string filePath)
+        {
+            var plot = _spectrumPlot.Plot.GetPlottables()
+                .OfType<Scatter>() // Filters and casts only Scatter plots
+                .FirstOrDefault(plot => plot.LegendText != "RawData");
 
-            var sliced_xData = indices.Select(i => xData[i]).ToArray();
-            var sliced_yData = indices.Select(i => yData[i]).ToArray();
+            if (plot != null)
+            {
+                _spectrumPlot.Plot.Remove(plot);
+            }
 
-            return (sliced_xData, sliced_yData);
+            double[] x = _spectrumViewModel.ImportedWavelength;
+            double[] y = _spectrumViewModel.ImportedAbsorbance.Clone() as double[];
+
+            double scaler = PlotSettings.Instance.Spectrum.ImportedSpectrumScaler;
+            if (scaler != 1.0)
+            {
+                for (int i = 0; i < y.Length; i++)
+                {
+                    y[i] *= scaler;
+                }
+            }
+
+            var newScatter = _spectrumPlot.Plot.Add.ScatterLine(x, y);
+            newScatter.LegendText = filePath.Split("\\").Last();
+            newScatter.LineWidth = 2F;
+            newScatter.Color = PlotSettings.Instance.Spectrum.ImportedLineColor;
+
+            if (PlotSettings.Instance.Spectrum.HoldManualLimits)
+            {
+                //
+            }
+            else
+            {
+                _spectrumPlot.Plot.Axes.AutoScale();
+            }
+
+            _spectrumPlot.Refresh();
+
+        }
+
+        public void ImportedSpectrumVisibilityChanged()
+        {
+            var plot = _spectrumPlot.Plot.GetPlottables()
+                .OfType<Scatter>() // Filters and casts only Scatter plots
+                .FirstOrDefault(plot => plot.LegendText != "RawData");
+
+            if (plot != null)
+            {
+                plot.IsVisible = PlotSettings.Instance.Spectrum.ShowImportedSpectrum;
+            }
         }
 
         //                Helper methods for mouse/plot interactions
         /******************************************************************************/
-        private void _chromatogramPlot_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+        private void Plot_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
         {
             e.Handled = true;
         }
 
-        private void _chromatogramPlot_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+        private void Plot_PreviewMouseDown(object sender, MouseButtonEventArgs e)
         {
-            if (e.ClickCount == 2 && (sender as WpfPlot).Name == "ChromatogramPlot")
+            if (e.ClickCount == 2)
             {
                 // allow for double clicks to open options again if closed
                 return;
             }
 
-            if (e.ClickCount == 1)
+            if (e.ClickCount == 1 && (sender as WpfPlot).Name == "ChromatogramPlot")
             {
                 ChromPlot_MouseDown(sender, e);
                 e.Handled = true;
@@ -751,6 +889,7 @@ namespace RawVision.Models
             }
             e.Handled = true;
         }
+
 
         private void ChromPlot_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
@@ -794,12 +933,17 @@ namespace RawVision.Models
             PlotSettings.Instance.Spectrum.YMin = limits.YRange.Min;
             PlotSettings.Instance.Spectrum.YMax = limits.YRange.Max;
 
+            OpenSpectrumPlotOptionsWindow();
+        }
+
+        public void OpenSpectrumPlotOptionsWindow()
+        {
             var window = Application.Current.Windows.OfType<SpectrumOptionsView>().FirstOrDefault();
             if (window == null)
             {
                 SpectrumOptionsView view = new SpectrumOptionsView();
 
-                view.Top = Application.Current.MainWindow.Top + view.Height;
+                view.Top = Application.Current.MainWindow.Top + Application.Current.MainWindow.Height - view.Height;
                 view.Left = Application.Current.MainWindow.Left + Application.Current.MainWindow.Width;
 
                 view.Show();

@@ -19,17 +19,18 @@ namespace RVPDA.ViewModels
     {
         private ObservableCollection<ObservableCollection<DataRow>> _peakLists;
 
-        private double[] wavelengths;
-
-        private double[,] intensityRaw;
-        private double[,] intensitySliced;
-
-        private double[,] log10intensityRaw;
-        private double[,] log10intensitySliced;
+        private double[] wavelengthsRaw;
+        private double[] wavelengthsSliced;
 
         private List<double[]> intensityListSliced;
         private List<double[]> intensityListRaw;
-        private List<double[]> log10intensityList;
+        private List<double[]> log10intensityListSliced;
+        private List<double[]> log10intensityListRaw;
+
+        private double minIntensityRaw = double.MaxValue;
+        private double maxIntensityRaw = double.MinValue;
+        private double? minIntensitySliced = null;
+        private double? maxIntensitySliced = null;
 
         private double[] importedWavelength;
         private double[] importedAbsorbance;
@@ -38,15 +39,6 @@ namespace RVPDA.ViewModels
 
         private IRawDataExtended _rawFile;
 
-        public double[,] Intensity
-        {
-            get { return intensitySliced ?? intensityRaw; } 
-        }
-
-        public double[,] Log10Intensity
-        {
-            get { return log10intensitySliced ?? log10intensityRaw; }
-        }
 
         public List<double[]> IntensityList
         {
@@ -55,15 +47,23 @@ namespace RVPDA.ViewModels
 
         public List<double[]> Log10IntensityList
         {
-            get { return log10intensityList; }
+            get { return log10intensityListSliced ?? log10intensityListRaw; }
         }
 
-        public double minIntensity = double.MaxValue;
-        public double maxIntensity = double.MinValue;
+        public double MinIntensity
+        {
+            get { return minIntensitySliced ?? minIntensityRaw; }
+        }
+
+        public double MaxIntensity
+        {
+            get { return maxIntensitySliced ?? maxIntensityRaw; }
+        }
+
 
         public double[] Wavelengths
         {
-            get { return wavelengths; }
+            get { return wavelengthsSliced ?? wavelengthsRaw; }
         }
 
         public double[] ImportedWavelength
@@ -107,14 +107,13 @@ namespace RVPDA.ViewModels
 
         public SpectrumViewModel()
         {
-            wavelengths = new double[0];
-            intensityRaw = new double[0, 0];
-            log10intensityRaw = new double[0, 0];
-            intensitySliced = null;
-            log10intensitySliced = null;
+            wavelengthsRaw = new double[0];
             intensityListRaw = new List<double[]>();
+            log10intensityListRaw = new List<double[]>();
+
+            wavelengthsSliced = null;
             intensityListSliced = null;
-            log10intensityList = new List<double[]>();
+            log10intensityListSliced = null;
 
             scanNumbers = new List<int>();
 
@@ -125,22 +124,17 @@ namespace RVPDA.ViewModels
         {
             _rawFile = rf;
             _numberOfScansInt = _rawFile.RunHeaderEx.SpectraCount;
-            GetMassSpectra();
+            GetPDASpectra();
         }
 
 
-        private void GetMassSpectra()
+        private void GetPDASpectra()
         {
             double[] times = new double[_numberOfScansInt];
 
             // Get the first and last scan from the RAW file
             int firstScanNumber = _rawFile.RunHeaderEx.FirstSpectrum;
             int lastScanNumber = _rawFile.RunHeaderEx.LastSpectrum;
-
-            System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
-            sw.Start();
-
-            double maxInt = 0;
 
             int i = 0;
             for (int sn = firstScanNumber; sn <= lastScanNumber; sn++)
@@ -151,49 +145,43 @@ namespace RVPDA.ViewModels
 
                 if (sn == 1)
                 {
-                    wavelengths = scan.Positions;
+                    wavelengthsRaw = scan.Positions;
                 }
-
-                intensityRaw = new double[_numberOfScansInt, scan.Intensities.Length];
-                log10intensityRaw = new double[_numberOfScansInt, scan.Intensities.Length];
 
                 var log10valuesForList = new double[scan.Intensities.Length];
                 var valuesForList = new double[scan.Intensities.Length];
 
                 for (int j = 0; j < scan.Intensities.Length; j++)
                 {
-                    double value = scan.Intensities[j];
-                    intensityRaw[i, j] = value;
-                    log10intensityRaw[i,j] = value <= 0 ? 0 : Math.Log10(value);
-                    log10valuesForList[j] = log10intensityRaw[i, j];
+                    double value = scan.Intensities[j] / 1000000;
+                    
                     valuesForList[j] = value;
+                    log10valuesForList[j] = scan.Intensities[j] <= 0 ? 0 : Math.Log10(scan.Intensities[j]);
 
-                    if (value < minIntensity)
+                    if (value < minIntensityRaw)
                     {
-                        minIntensity = value;
+                        minIntensityRaw = value;
                     }
-                    if (value > maxIntensity)
+                    if (value > maxIntensityRaw)
                     {
-                        maxIntensity = value;
+                        maxIntensityRaw = value;
                     }
                 }
                 
                 scanNumbers.Add(sn);
-                log10intensityList.Add(log10valuesForList);
-                intensityListRaw.Add(scan.Intensities);
+                log10intensityListRaw.Add(log10valuesForList);
+                intensityListRaw.Add(valuesForList);
                 i++;
             }
 
             NumberOfScans = scanNumbers.Count().ToString();
-            sw.Stop();
-            Console.WriteLine("Time to get PDA spectra: " + sw.ElapsedMilliseconds + " ms");
 
             if (double.IsNaN(PlotSettings.Instance.Chromatogram.ColorMin))
             {
-                PlotSettings.Instance.Chromatogram.ColorMin = minIntensity;
-                PlotSettings.Instance.Chromatogram.ColorMax = maxIntensity;
-                PlotSettings.Instance.Chromatogram.DefaultMinColorValue = minIntensity;
-                PlotSettings.Instance.Chromatogram.DefaultMaxColorValue = maxIntensity;
+                PlotSettings.Instance.Chromatogram.ColorMin = minIntensityRaw;
+                PlotSettings.Instance.Chromatogram.ColorMax = maxIntensityRaw;
+                PlotSettings.Instance.Chromatogram.DefaultMinColorValue = minIntensityRaw;
+                PlotSettings.Instance.Chromatogram.DefaultMaxColorValue = maxIntensityRaw;
             }
 
         }
@@ -202,10 +190,13 @@ namespace RVPDA.ViewModels
         {
             Mouse.OverrideCursor = Cursors.Wait;
 
+            minIntensitySliced = double.MaxValue;
+            maxIntensitySliced = double.MinValue;
+
             var min = PlotSettings.Instance.WavelengthRangeMinimum;
             var max = PlotSettings.Instance.WavelengthRangeMaximum;
 
-            var wl = wavelengths;
+            var wl = wavelengthsRaw;
             var au = intensityListRaw;
             //var times = Data.GetTimes();
 
@@ -217,33 +208,58 @@ namespace RVPDA.ViewModels
                 .ToArray();
 
             // Create a new 2D array for the selected rows
-            intensitySliced = new double[au.Count(), indices.Length];
             intensityListSliced = new List<double[]>();
-            log10intensitySliced = new double[au.Count(), indices.Length];
-            wavelengths = new double[indices.Length];
+            log10intensityListSliced = new List<double[]>();
+
+            wavelengthsSliced = new double[indices.Length];
 
             // Fill the new array with the selected rows
             for (int i = 0; i < au.Count(); i++)
             {
                 double[] valuesForList = new double[indices.Length];
+                double[] log10valuesForList = new double[indices.Length];
 
                 for (int j = 0; j < indices.Length; j++)
                 {
                     int columnIndex = indices[j];
+                    double value = au[i][columnIndex];
 
-                    intensitySliced[i, j] = au[i][columnIndex];
-                    log10intensitySliced[i, j] = au[i][columnIndex] <= 0 ? 0 : Math.Log10(au[i][columnIndex]);
-                    valuesForList[j] = au[i][columnIndex];
+                    valuesForList[j] = value;
+                    log10valuesForList[j] = value <= 0 ? 0 : Math.Log10(value*1e6);
 
                     if (i == 0)
                     {
-                        wavelengths[j] = wl[columnIndex];
+                        wavelengthsSliced[j] = wl[columnIndex];
+                    }
+
+                    if (au[i][columnIndex] < minIntensitySliced.GetValueOrDefault())
+                    {
+                        minIntensitySliced = value;
+                    }
+                    if (au[i][columnIndex] > maxIntensitySliced.GetValueOrDefault())
+                    {
+                        maxIntensitySliced = value;
                     }
                 }
 
 
                 intensityListSliced.Add(valuesForList);
+                log10intensityListSliced.Add(log10valuesForList);
 
+            }
+
+            PlotSettings.Instance.Chromatogram.DefaultMinColorValue = minIntensitySliced.GetValueOrDefault();
+            PlotSettings.Instance.Chromatogram.DefaultMaxColorValue = maxIntensitySliced.GetValueOrDefault();
+
+            if (PlotSettings.Instance.Chromatogram.MapScaling == "Linear")
+            {
+                PlotSettings.Instance.Chromatogram.ColorMin = minIntensitySliced.GetValueOrDefault();
+                PlotSettings.Instance.Chromatogram.ColorMax = maxIntensitySliced.GetValueOrDefault();
+            }
+            else
+            {
+                PlotSettings.Instance.Chromatogram.ColorMin = minIntensitySliced.GetValueOrDefault() <= 0 ? 0 : Math.Log10(minIntensitySliced.GetValueOrDefault()*1e6);
+                PlotSettings.Instance.Chromatogram.ColorMax = maxIntensitySliced.GetValueOrDefault() <= 0 ? 0 : Math.Log10(maxIntensitySliced.GetValueOrDefault()*1e6);
             }
 
             Mouse.OverrideCursor = null;
@@ -252,7 +268,18 @@ namespace RVPDA.ViewModels
         public void ResetWavelengthRange()
         {
             intensityListSliced = null;
+            log10intensityListSliced = null;
+            wavelengthsSliced = null;
+
+            minIntensitySliced = null;
+            maxIntensitySliced = null;
+
+            PlotSettings.Instance.Chromatogram.ColorMin = minIntensityRaw;
+            PlotSettings.Instance.Chromatogram.ColorMax = maxIntensityRaw;
+            PlotSettings.Instance.Chromatogram.DefaultMinColorValue = minIntensityRaw;
+            PlotSettings.Instance.Chromatogram.DefaultMaxColorValue = maxIntensityRaw;
         }
+
 
         public ObservableCollection<DataRow> CreatePeakList(int ScanNumber)
         {
@@ -261,7 +288,7 @@ namespace RVPDA.ViewModels
             for (int i = 0; i < IntensityList[ScanNumber].Count(); i++)
             {
                 DataRow row = new DataRow();
-                row.Mass = wavelengths[i];
+                row.Mass = Wavelengths[i];
                 row.Intensity = IntensityList[ScanNumber][i];
                 peaks.Add(row);
             }

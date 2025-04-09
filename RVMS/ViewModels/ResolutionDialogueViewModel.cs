@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
-namespace RawVision.ViewModels
+namespace RVMS.ViewModels
 {
     internal class ResolutionDialogueViewModel
     {

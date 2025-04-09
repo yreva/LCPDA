@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using System.Windows.Data;
 using System.Windows.Input;
 
-namespace RawVision
+namespace RVMS
 {
     public class EnumToBooleanConverter : IValueConverter
     {

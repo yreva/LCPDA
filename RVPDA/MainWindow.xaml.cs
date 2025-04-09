@@ -86,6 +86,7 @@ namespace RVPDA.Views
             viewModel.ChromatogramPlot.PreviewKeyDown += WpfPlot_KeyDown;
             viewModel.SpectrumPlot.PreviewKeyDown += WpfPlot_KeyDown;
             viewModel.SpectrumViewModel.PropertyChanged += SpectrumViewModel_OnPropertyChanged;
+            PlotSettings.Instance.ResetOnNewClick();
         }
 
         public void IncrementScanNumber(object sender, RoutedEventArgs e)

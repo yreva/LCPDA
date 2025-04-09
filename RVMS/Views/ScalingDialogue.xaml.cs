@@ -11,9 +11,9 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
-using RawVision.ViewModels;
+using RVMS.ViewModels;
 
-namespace RawVision.Views
+namespace RVMS.Views
 {
     /// <summary>
     /// Interaction logic for ScalingDialogue.xaml

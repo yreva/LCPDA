@@ -12,7 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 
-namespace RawVision.Views
+namespace RVMS.Views
 {
     /// <summary>
     /// Interaction logic for PeakListWindow.xaml

@@ -4,73 +4,94 @@ using System.Windows;
 using ThermoFisher.CommonCore.Data.Business;
 using ThermoFisher.CommonCore.Data.Interfaces;
 using System.Collections.Concurrent;
-using System.Runtime.CompilerServices;
 using System.Windows.Input;
-using RawVision.Views;
 
 
-namespace RawVision.ViewModels
+namespace RVMS.ViewModels
 {
     public class SpectrumViewModel : INotifyPropertyChanged
     {
         private ObservableCollection<ObservableCollection<DataRow>> _peakLists;
 
-        private List<double> uniqueMasses;
-        private double[,] _intensities2D;
-        private double[,] _log10Intensities2D;
+        private double[] combinedMassesRaw;
+        private double[] combinedMassesSliced;
 
-        private List<double> _slicedUniqueMasses;
-        private double[,] _slicedIntensities2D;
-        private double[,] _slicedLog10Intensities2D;
+        private List<double[]> allMassesRaw;
+        private List<double[]> allMassesSliced;
 
-        private List<double[]> mz;
-        private List<double[]> intensity;
+        private List<double[]> intensityListSliced;
+        private List<double[]> intensityListRaw;
+        private List<double[]> log10intensityListSliced;
+        private List<double[]> log10intensityListRaw;
+
+        private List<double[]> intensity2dRaw;
+        private List<double[]> intensity2dSliced;
+        private List<double[]> log10Intensity2dRaw;
+        private List<double[]> log10Intensity2dSliced;
+
+        private double minIntensityRaw = double.MaxValue;
+        private double maxIntensityRaw = double.MinValue;
+        private double? minIntensitySliced = null;
+        private double? maxIntensitySliced = null;
+
+        private double[] importedWavelength;
+        private double[] importedAbsorbance;
+
         private List<int> scanNumbers;
         private int roundToDecimal;
 
         private IRawDataExtended _rawFile;
 
-        public List<double[]> MZ
+
+        public List<double[]> IntensityList
         {
-            get { return mz; }
+            get { return intensityListSliced ?? intensityListRaw; }
         }
 
-        public List<double[]> Intensity
+        public List<double[]> Log10IntensityList
         {
-            get { return intensity; }
+            get { return log10intensityListSliced ?? log10intensityListRaw; }
         }
 
-        public List<double> UniqueMasses
+        public List<double[]> Intensity2D
         {
-            get { return uniqueMasses; }
+            get { return intensity2dSliced ?? intensity2dRaw; }
         }
 
-        public double[,] Intensities2D
+        public List<double[]> Log10Intensity2D
         {
-            get { return _intensities2D; }
+            get { return log10Intensity2dSliced ?? log10Intensity2dRaw; }
         }
 
-        public double[,] Log10Intensities2D
+
+        public double MinIntensity
         {
-            get { return _log10Intensities2D; }
+            get { return minIntensitySliced ?? minIntensityRaw; }
         }
 
-        public List<double> SlicedUniqueMasses
+        public double MaxIntensity
         {
-            get { return _slicedUniqueMasses; }
-            set { _slicedUniqueMasses = value; }
+            get { return maxIntensitySliced ?? maxIntensityRaw; }
         }
 
-        public double[,] SlicedIntensities2D
+        public List<double[]> MassesList
         {
-            get { return _slicedIntensities2D; }
-            set { _slicedIntensities2D = value; }
+            get { return allMassesSliced ?? allMassesRaw; }
         }
 
-        public double[,] SlicedLog10Intensities2D
+        public double[] CombinedMasses
         {
-            get { return _slicedLog10Intensities2D; }
-            set { _slicedLog10Intensities2D = value; }
+            get { return combinedMassesSliced ?? combinedMassesRaw; }
+        }
+
+        public double[] ImportedWavelength
+        {
+            get { return importedWavelength; }
+        }
+
+        public double[] ImportedAbsorbance
+        {
+            get { return importedAbsorbance; }
         }
 
         private string _polarity;
@@ -84,31 +105,8 @@ namespace RawVision.ViewModels
             }
         }
 
-        private List<double[]> intensityListRaw;
-        private List<double[]> intensityListSliced;
-
-        public List<double[]> IntensityList
-        {
-            get
-            {
-                return intensityListSliced ?? intensityListRaw;
-            }
-        }
-
-        private List<double[]> log10intensityListRaw;
-        private List<double[]> log10intensityListSliced;
-        public List<double[]> Log10IntensityList
-        {
-            get
-            {
-                return log10intensityListSliced ?? log10intensityListRaw;
-            }
-        }
-
-        public double minIntensity = double.MaxValue;
-        public double maxIntensity = double.MinValue;
-
         private string _numberOfScans;
+        private int _numberOfScansInt;
         public string NumberOfScans
         {
             get => _numberOfScans;
@@ -127,12 +125,15 @@ namespace RawVision.ViewModels
 
         public SpectrumViewModel()
         {
-            mz = new List<double[]>();
-            intensity = new List<double[]>();
-            scanNumbers = new List<int>();
-
+            combinedMassesRaw = new double[0];
             intensityListRaw = new List<double[]>();
             log10intensityListRaw = new List<double[]>();
+
+            combinedMassesSliced = null;
+            intensityListSliced = null;
+            log10intensityListSliced = null;
+
+            scanNumbers = new List<int>();
 
             PeakLists = new ObservableCollection<ObservableCollection<DataRow>>();
         }
@@ -140,7 +141,67 @@ namespace RawVision.ViewModels
         public void SetRawFile(IRawDataExtended rf)
         {
             _rawFile = rf;
+            _numberOfScansInt = _rawFile.RunHeaderEx.SpectraCount;
             GetMassSpectra();
+        }
+
+
+        private void GetPDASpectra()
+        {
+            double[] times = new double[_numberOfScansInt];
+
+            // Get the first and last scan from the RAW file
+            int firstScanNumber = _rawFile.RunHeaderEx.FirstSpectrum;
+            int lastScanNumber = _rawFile.RunHeaderEx.LastSpectrum;
+
+            int i = 0;
+            for (int sn = firstScanNumber; sn <= lastScanNumber; sn++)
+            {
+                var stats = _rawFile.GetScanStatsForScanNumber(sn);
+                var scan = _rawFile.GetSegmentedScanFromScanNumber(sn);
+                times[i] = _rawFile.RetentionTimeFromScanNumber(sn);
+
+                if (sn == 1)
+                {
+                    //wavelengthsRaw = scan.Positions;
+                }
+
+                var log10valuesForList = new double[scan.Intensities.Length];
+                var valuesForList = new double[scan.Intensities.Length];
+
+                for (int j = 0; j < scan.Intensities.Length; j++)
+                {
+                    double value = scan.Intensities[j] / 1000000;
+                    
+                    valuesForList[j] = value;
+                    log10valuesForList[j] = scan.Intensities[j] <= 0 ? 0 : Math.Log10(scan.Intensities[j]);
+
+                    if (value < minIntensityRaw)
+                    {
+                        minIntensityRaw = value;
+                    }
+                    if (value > maxIntensityRaw)
+                    {
+                        maxIntensityRaw = value;
+                    }
+                }
+                
+                scanNumbers.Add(sn);
+                log10intensityListRaw.Add(log10valuesForList);
+                intensityListRaw.Add(valuesForList);
+                i++;
+            }
+
+            NumberOfScans = scanNumbers.Count().ToString();
+
+            if (double.IsNaN(PlotSettings.Instance.Chromatogram.ColorMin))
+            {
+                PlotSettings.Instance.Chromatogram.ColorMin = minIntensityRaw;
+                PlotSettings.Instance.Chromatogram.ColorMax = maxIntensityRaw;
+                PlotSettings.Instance.Chromatogram.DefaultMinColorValue = minIntensityRaw;
+                PlotSettings.Instance.Chromatogram.DefaultMaxColorValue = maxIntensityRaw;
+            }
+
         }
 
         public void SetMassResolution(int mrd)
@@ -153,8 +214,8 @@ namespace RawVision.ViewModels
         {
             List<int> massSpectraIdx = new List<int>();
 
-            mz = new List<double[]>();
-            intensity = new List<double[]>();
+            allMassesRaw = new List<double[]>();
+            intensityListRaw = new List<double[]>();
             scanNumbers = new List<int>();
 
             // Get the first and last scan from the RAW file
@@ -197,27 +258,27 @@ namespace RawVision.ViewModels
             Polarity = _rawFile.GetFilterForScanNumber(scanNumbers[0]).Polarity.ToString();
             NumberOfScans = scanNumbers.Count().ToString();
 
-            var result = await ProcessIntensityMatrixAsync(mz, intensity, scanNumbers.Count());
+            var result = await ProcessIntensityMatrixAsync(allMassesRaw, intensityListRaw, scanNumbers.Count());
 
-            uniqueMasses = result.Item1;
-            _intensities2D = result.Item2;
-            _log10Intensities2D = result.Item3;
+            combinedMassesRaw = result.Item1.ToArray();
+            intensity2dRaw = result.Item2;
+            log10Intensity2dRaw = result.Item3;
+
         }
-
 
         private void RoundMassesToDecimal(List<(double Mass, double Intensity)> data, int toDecimal)
         {
             var groupedData = data
-                        .GroupBy(d => Math.Round(d.Mass, toDecimal))
-                        .Select(g => (Mass: g.Key, Intensity: g.Max(d => d.Intensity)))
-                        .ToList();
+                .GroupBy(d => Math.Round(d.Mass, toDecimal))
+                .Select(g => (Mass: g.Key, Intensity: g.Max(d => d.Intensity)))
+                .ToList();
 
-            mz.Add(groupedData.Select(item => item.Mass).ToArray());
-            intensity.Add(groupedData.Select(item => item.Intensity).ToArray());
+            allMassesRaw.Add(groupedData.Select(item => item.Mass).ToArray());
+            intensityListRaw.Add(groupedData.Select(item => item.Intensity).ToArray());
         }
 
-        public async Task<(List<double>, double[,], double[,])> ProcessIntensityMatrixAsync(
-                List<double[]> massLists, List<double[]> intensityLists, int numScans)
+        public async Task<(List<double>, List<double[]>, List<double[]>)> ProcessIntensityMatrixAsync(
+            List<double[]> massLists, List<double[]> intensityLists, int numScans)
         {
             // Step 1: Find all unique mz values
             HashSet<double> uniqueMzSet = new HashSet<double>(massLists.SelectMany(x => x));
@@ -225,8 +286,14 @@ namespace RawVision.ViewModels
 
             // Step 2: Initialize intensity matrix
             int numRows = uniqueMZ.Count;
-            double[,] intensityVsTime = new double[numRows, numScans];
-            double[,] logIntensityVsTime = new double[numRows, numScans];
+            List<double[]> intensityVsTime = new List<double[]>(new double[numScans][]);
+            List<double[]> logIntensityVsTime = new List<double[]>(new double[numScans][]);
+
+            Parallel.For(0, numScans, i =>
+            {
+                intensityVsTime[i] = new double[numRows];
+                logIntensityVsTime[i] = new double[numRows];
+            });
 
             // Step 3: Use a ConcurrentDictionary to store intensity data
             ConcurrentDictionary<int, double[]> intensityStorage = new ConcurrentDictionary<int, double[]>();
@@ -267,81 +334,154 @@ namespace RawVision.ViewModels
             {
                 int rowIndex = kvp.Key;
                 double[] rowValues = kvp.Value;
-                double[] log10rowValues = new double[rowValues.Length];
                 for (int col = 0; col < numScans; col++)
                 {
-                    intensityVsTime[rowIndex, col] = rowValues[col];
-                    log10rowValues[col] = (rowValues[col] == 0) ? 0 : Math.Log10(rowValues[col]);
-                    logIntensityVsTime[rowIndex, col] = (rowValues[col] == 0) ? 0 : Math.Log10(rowValues[col]);
+                    intensityVsTime[col][rowIndex] = rowValues[col];
+                    logIntensityVsTime[col][rowIndex] = (rowValues[col] == 0) ? 0 : Math.Log10(rowValues[col]);
 
-                    if (rowValues[col] < minIntensity)
+                    if (rowValues[col] < minIntensityRaw)
                     {
-                        minIntensity = rowValues[col];
+                        minIntensityRaw = rowValues[col];
                     }
-                    if (rowValues[col] > maxIntensity)
+
+                    if (rowValues[col] > maxIntensityRaw)
                     {
-                        maxIntensity = rowValues[col];
+                        maxIntensityRaw = rowValues[col];
                     }
                 }
-                intensityListRaw.Add(rowValues);
-                log10intensityListRaw.Add(log10rowValues);
             }
 
-            MessageBox.Show(Application.Current.MainWindow,"Processing Finished, File Loaded.", "Loading Complete", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show(Application.Current.MainWindow, "Processing Finished, File Loaded.", "Loading Complete",
+                MessageBoxButton.OK, MessageBoxImage.Information);
 
-            PlotSettings.Instance.Chromatogram.DefaultMinColorValue = minIntensity;
-            PlotSettings.Instance.Chromatogram.DefaultMaxColorValue = maxIntensity;
+            PlotSettings.Instance.Chromatogram.DefaultMinColorValue = minIntensityRaw;
+            PlotSettings.Instance.Chromatogram.DefaultMaxColorValue = maxIntensityRaw;
 
-            PlotSettings.Instance.Chromatogram.ColorMin = minIntensity;
-            PlotSettings.Instance.Chromatogram.ColorMax = maxIntensity;
+            PlotSettings.Instance.Chromatogram.ColorMin = minIntensityRaw;
+            PlotSettings.Instance.Chromatogram.ColorMax = maxIntensityRaw;
 
             return (uniqueMZ, intensityVsTime, logIntensityVsTime);
         }
 
-        public ObservableCollection<DataRow> CreatePeakList(int ScanNumber)
+        public void TrimDataToWavelengthRange()
         {
-            ObservableCollection<DataRow> peaks = new ObservableCollection<DataRow>();
+            Mouse.OverrideCursor = Cursors.Wait;
 
-            for (int i = 0; i < mz[ScanNumber].Count(); i++)
-            {
-                DataRow row = new DataRow();
-                row.Mass = mz[ScanNumber][i];
-                row.Intensity = intensity[ScanNumber][i];
-                peaks.Add(row);
-            }
+            minIntensitySliced = double.MaxValue;
+            maxIntensitySliced = double.MinValue;
 
-            return peaks;
-        }
+            var min = PlotSettings.Instance.WavelengthRangeMinimum;
+            var max = PlotSettings.Instance.WavelengthRangeMaximum;
 
-        public void TrimDataToMassRange()
-        {
-            var min = PlotSettings.Instance.MassRangeMinimum;
-            var max = PlotSettings.Instance.MassRangeMaximum;
+            var wl = combinedMassesRaw;
+            var au = intensity2dRaw;
+            //var times = Data.GetTimes();
 
             // Get the indices of values between Min and Max
-            var indices = UniqueMasses
+            var indices = wl
                 .Select((value, index) => new { value, index })
                 .Where(pair => pair.value >= min && pair.value <= max)
                 .Select(pair => pair.index)
                 .ToArray();
 
             // Create a new 2D array for the selected rows
-            SlicedIntensities2D = new double[indices.Length, Intensities2D.GetLength(1)];
-            SlicedLog10Intensities2D = new double[indices.Length, Intensities2D.GetLength(1)];
-            SlicedUniqueMasses = new List<double>();
+            intensity2dSliced = new List<double[]>();
+            log10Intensity2dSliced = new List<double[]>();
+
+            combinedMassesSliced = new double[indices.Length];
 
             // Fill the new array with the selected rows
-            for (int i = 0; i < indices.Length; i++)
+            for (int i = 0; i < au.Count(); i++)
             {
-                SlicedUniqueMasses.Add(UniqueMasses[indices[i]]);
-                int rowIndex = indices[i];
-                for (int j = 0; j < Intensities2D.GetLength(1); j++)
+                double[] valuesForList = new double[indices.Length];
+                double[] log10valuesForList = new double[indices.Length];
+
+                for (int j = 0; j < indices.Length; j++)
                 {
-                    SlicedIntensities2D[i, j] = Intensities2D[rowIndex, j];
-                    SlicedLog10Intensities2D[i, j] = Log10Intensities2D[rowIndex, j];
+                    int columnIndex = indices[j];
+                    double value = au[i][columnIndex];
+
+                    valuesForList[j] = value;
+                    log10valuesForList[j] = value <= 0 ? 0 : Math.Log10(value);
+
+                    if (i == 0)
+                    {
+                        combinedMassesSliced[j] = wl[columnIndex];
+                    }
+
+                    if (au[i][columnIndex] < minIntensitySliced.GetValueOrDefault())
+                    {
+                        minIntensitySliced = value;
+                    }
+                    if (au[i][columnIndex] > maxIntensitySliced.GetValueOrDefault())
+                    {
+                        maxIntensitySliced = value;
+                    }
                 }
+
+
+                intensity2dSliced.Add(valuesForList);
+                log10Intensity2dSliced.Add(log10valuesForList);
+
             }
+
+            PlotSettings.Instance.Chromatogram.DefaultMinColorValue = minIntensitySliced.GetValueOrDefault();
+            PlotSettings.Instance.Chromatogram.DefaultMaxColorValue = maxIntensitySliced.GetValueOrDefault();
+
+            if (PlotSettings.Instance.Chromatogram.MapScaling == "Linear")
+            {
+                PlotSettings.Instance.Chromatogram.ColorMin = minIntensitySliced.GetValueOrDefault();
+                PlotSettings.Instance.Chromatogram.ColorMax = maxIntensitySliced.GetValueOrDefault();
+            }
+            else
+            {
+                PlotSettings.Instance.Chromatogram.ColorMin = minIntensitySliced.GetValueOrDefault() <= 0 ? 0 : Math.Log10(minIntensitySliced.GetValueOrDefault()*1e6);
+                PlotSettings.Instance.Chromatogram.ColorMax = maxIntensitySliced.GetValueOrDefault() <= 0 ? 0 : Math.Log10(maxIntensitySliced.GetValueOrDefault()*1e6);
+            }
+
+            Mouse.OverrideCursor = null;
         }
+
+        public void ResetWavelengthRange()
+        {
+            allMassesSliced = null;
+            intensityListSliced = null;
+            log10intensityListSliced = null;
+
+            combinedMassesSliced = null;
+            intensity2dSliced = null;
+            log10Intensity2dSliced = null;
+
+            minIntensitySliced = null;
+            maxIntensitySliced = null;
+
+            PlotSettings.Instance.Chromatogram.ColorMin = minIntensityRaw;
+            PlotSettings.Instance.Chromatogram.ColorMax = maxIntensityRaw;
+            PlotSettings.Instance.Chromatogram.DefaultMinColorValue = minIntensityRaw;
+            PlotSettings.Instance.Chromatogram.DefaultMaxColorValue = maxIntensityRaw;
+        }
+
+
+        public ObservableCollection<DataRow> CreatePeakList(int scanIndex)
+        {
+            ObservableCollection<DataRow> peaks = new ObservableCollection<DataRow>();
+
+            for (int i = 0; i < IntensityList[scanIndex].Count(); i++)
+            {
+                DataRow row = new DataRow();
+                row.Mass = MassesList[scanIndex][i];
+                row.Intensity = IntensityList[scanIndex][i];
+                peaks.Add(row);
+            }
+
+            return peaks;
+        }
+
+        public void AddImportedSpectrum(double[] wavelengths, double[] absorbance)
+        {
+            importedWavelength = wavelengths;
+            importedAbsorbance = absorbance;
+        }   
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -349,6 +489,8 @@ namespace RawVision.ViewModels
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
+
+
     }
 
     public class DataRow

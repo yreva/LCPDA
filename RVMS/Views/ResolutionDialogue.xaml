@@ -1,4 +1,4 @@
-﻿<Window x:Class="RawVision.Views.ResolutionDialogue"
+﻿<Window x:Class="RVMS.Views.ResolutionDialogue"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Choose Mass Resolution" Height="225" Width="375" WindowStartupLocation="CenterOwner" ResizeMode="NoResize">

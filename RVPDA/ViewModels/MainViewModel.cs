@@ -184,7 +184,7 @@ namespace RVPDA.ViewModels
 
         private void Plot2DChromatogram()
         {
-            if (_spectrumViewModel.Intensity == null)
+            if (_spectrumViewModel.IntensityList.Count == 0)
             {
                 return;
             }
@@ -204,36 +204,26 @@ namespace RVPDA.ViewModels
                     Plot2DChromatogram();
                     break;
             }
+
+            CheckUpdateOptionsWindow();
         }
 
-        private double[,] RemoveLowIntensityRows(double[,] array, double multiplier)
+        private void CheckUpdateOptionsWindow()
         {
-            int rows = array.GetLength(0);
-            int cols = array.GetLength(1);
-
-            // Find the max value in the entire array
-            double globalMax = array.Cast<double>().Max();
-            double threshold = multiplier * globalMax;
-
-            // Identify rows where max(row) >= threshold
-            var validRows = Enumerable.Range(0, rows)
-                .Where(r => Enumerable.Range(0, cols)
-                    .Max(c => array[r, c]) >= threshold)
-                .ToArray();
-
-            // Create new array with only valid rows
-            double[,] result = new double[validRows.Length, cols];
-
-            for (int i = 0; i < validRows.Length; i++)
+            foreach (Window window in Application.Current.Windows)
             {
-                for (int j = 0; j < cols; j++)
+                if (window is ChromatogramOptionsView chromatogramOptionsView)
                 {
-                    result[i, j] = array[validRows[i], j];
+                    var limits = _chromatogramPlot.Plot.Axes.GetLimits();
+                    PlotSettings.Instance.Chromatogram.XMin = limits.XRange.Min;
+                    PlotSettings.Instance.Chromatogram.XMax = limits.XRange.Max;
+                    PlotSettings.Instance.Chromatogram.YMin = limits.YRange.Min;
+                    PlotSettings.Instance.Chromatogram.YMax = limits.YRange.Max;
+                    chromatogramOptionsView.CheckValuesUpdatedExternally();
                 }
             }
-
-            return result;
         }
+
 
         public void ScalingMethodChanged()
         {
@@ -242,8 +232,10 @@ namespace RVPDA.ViewModels
             {
                 return;
             }
-
+            
+            PlotSettings.Instance.Chromatogram.ResetColorLimit_NoNotify();
             Plot2DChromatogram();
+            CheckUpdateOptionsWindow();
         }
 
         public int GetScanNumberFromRetentionTime(double rt)
@@ -289,7 +281,7 @@ namespace RVPDA.ViewModels
         public ICommand SaveDataCommand { get; }
         public void SaveDataPressed()
         {
-            _ioModel.WriteDataToCsv(_spectrumViewModel.Wavelengths,_chromatogramViewModel.Times,_spectrumViewModel.Intensity);
+            _ioModel.WriteDataToCsv(_spectrumViewModel.Wavelengths,_chromatogramViewModel.Times,_spectrumViewModel.IntensityList.ToArray());
         }
         public ICommand OpenFileCommand { get; }
         public void OpenFile()
@@ -313,7 +305,6 @@ namespace RVPDA.ViewModels
         public ICommand LoadFileCommand { get; }
         public void LoadFilePressed()
         {
-            //HandleLoadingPopup("Start");
             Mouse.OverrideCursor = Cursors.Wait;
 
             if (SelectedFilePath == null)
@@ -322,7 +313,14 @@ namespace RVPDA.ViewModels
             }
 
             _currentScanNumber = 1;
-            _ioModel.OpenRawFile(SelectedFilePath);
+            int rfExists = _ioModel.OpenRawFile(SelectedFilePath);
+
+            if (rfExists == 0)
+            {
+                Mouse.OverrideCursor = null;
+                return;
+            }
+
             var rf = _ioModel.GetRawFileFromIOModel();
             _chromatogramViewModel.SetRawFile(rf);
 
@@ -344,7 +342,6 @@ namespace RVPDA.ViewModels
             _plotModel.PlotSpectrum();
 
             Mouse.OverrideCursor = null;
-            //HandleLoadingPopup("Stop");
         }
 
         public ICommand Command_ShowPeakList { get; }

@@ -1,22 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing.Imaging;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Xml.Linq;
-using Microsoft.VisualBasic;
-using OpenTK.Windowing.GraphicsLibraryFramework;
 using RVPDA.ViewModels;
 using RVPDA.Views;
 using ScottPlot;
-using ScottPlot.Colormaps;
-using ScottPlot.Panels;
 using ScottPlot.Plottables;
 using ScottPlot.WPF;
 using Range = ScottPlot.Range;
@@ -459,12 +449,8 @@ namespace RVPDA.Models
             hm.FlipVertically = true;
             hm.Extent = new CoordinateRect(x.Min(), x.Max(), y.Min(), y.Max());
 
-            double hmRangeMin = PlotSettings.Instance.Chromatogram.ColorMin <= 0
-                ? 0
-                : Math.Log10(PlotSettings.Instance.Chromatogram.ColorMin);
-            double hmRangeMax = PlotSettings.Instance.Chromatogram.ColorMin <= 0
-                ? 0
-                : Math.Log10(PlotSettings.Instance.Chromatogram.ColorMax);
+            double hmRangeMin = PlotSettings.Instance.Chromatogram.ColorMin;
+            double hmRangeMax = PlotSettings.Instance.Chromatogram.ColorMax;
             hm.ManualRange = new Range(hmRangeMin, hmRangeMax);
 
 
@@ -487,7 +473,7 @@ namespace RVPDA.Models
                 _colorbar.Source = hm;
             }
             _colorbar.IsVisible = true;
-            _colorbar.Label = "Log(microAu)";
+            _colorbar.Label = "Log(µAU)";
 
             // show vertical line for the scan being show in spectrum plot
             var vline = plt.Add.VerticalLine(_chromatogramViewModel.Times[PlotSettings.Instance.ScanNumber - 1]);
@@ -675,8 +661,20 @@ namespace RVPDA.Models
 
         private void ResetScalingColor()
         {
-            PlotSettings.Instance.Chromatogram.ColorMin = _spectrumViewModel.minIntensity;
-            PlotSettings.Instance.Chromatogram.ColorMax = _spectrumViewModel.maxIntensity;
+            string scalingMethod = PlotSettings.Instance.Chromatogram.MapScaling;
+            var CS = PlotSettings.Instance.Chromatogram;
+
+            if (scalingMethod == "Linear")
+            {
+                CS.ColorMin = CS.DefaultMinColorValue;
+                CS.ColorMax = CS.DefaultMaxColorValue;
+                return;
+            }
+            else if (scalingMethod == "Log10")
+            {
+                CS.ColorMin = CS.DefaultMinColorValue <= 0 ? 0 : Math.Log10(CS.DefaultMinColorValue * 1e6);
+                CS.ColorMax = CS.DefaultMaxColorValue <= 0 ? 0 : Math.Log10(CS.DefaultMaxColorValue * 1e6);
+            }
             SetManualLimits("Color");
         }
 
@@ -719,8 +717,11 @@ namespace RVPDA.Models
                     _chromatogramPlot.Plot.GetPlottables()
                         .FirstOrDefault(hm => hm.ToString().Contains("Heatmap"))
                         as Heatmap;
+
+
                 hm.ManualRange = new Range(PlotSettings.Instance.Chromatogram.ColorMin,
-                    PlotSettings.Instance.Chromatogram.ColorMax);
+                        PlotSettings.Instance.Chromatogram.ColorMax);
+
                 _chromatogramPlot.Refresh();
             }
         }
@@ -792,6 +793,24 @@ namespace RVPDA.Models
                 if (PlotSettings.Instance.Chromatogram.Style == "Map")
                 {
                     Plot2DChromatogram();
+                }
+            }
+            PlotSpectrum();
+            CheckUpdateOptionsWindow();
+        }
+
+        private void CheckUpdateOptionsWindow()
+        {
+            foreach (Window window in Application.Current.Windows)
+            {
+                if (window is ChromatogramOptionsView chromatogramOptionsView)
+                {
+                    var limits = _chromatogramPlot.Plot.Axes.GetLimits();
+                    PlotSettings.Instance.Chromatogram.XMin = limits.XRange.Min;
+                    PlotSettings.Instance.Chromatogram.XMax = limits.XRange.Max;
+                    PlotSettings.Instance.Chromatogram.YMin = limits.YRange.Min;
+                    PlotSettings.Instance.Chromatogram.YMax = limits.YRange.Max;
+                    chromatogramOptionsView.CheckValuesUpdatedExternally();
                 }
             }
         }

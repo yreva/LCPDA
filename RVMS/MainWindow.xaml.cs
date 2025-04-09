@@ -3,14 +3,14 @@ using System.Drawing;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using RawVision.ViewModels;
+using RVMS.ViewModels;
 using ScottPlot;
 using ScottPlot.WPF;
 using ThermoFisher.CommonCore.Data.Business;
 using HorizontalAlignment = System.Windows.HorizontalAlignment;
 using VerticalAlignment = System.Windows.VerticalAlignment;
 
-namespace RawVision.Views
+namespace RVMS.Views
 {
     public partial class MainWindow : Window
     {
@@ -32,6 +32,7 @@ namespace RawVision.Views
             
             viewModel.ChromatogramPlot.PreviewKeyDown += WpfPlot_KeyDown;
             viewModel.SpectrumPlot.PreviewKeyDown += WpfPlot_KeyDown;
+            viewModel.ChromatogramPlot.KeyDown += WpfPlot_CtrlKeyDown;
             viewModel.SpectrumViewModel.PropertyChanged += SpectrumViewModel_OnPropertyChanged;
         }
 
@@ -43,9 +44,6 @@ namespace RawVision.Views
         {
             switch (e.PropertyName)
             {
-                case "Polarity":
-                    Info_Polarity.Text = (sender as SpectrumViewModel).Polarity;
-                    break;
                 case "NumberOfScans":
                     Info_NumberOfScans.Text = (sender as SpectrumViewModel).NumberOfScans;
                     break;
@@ -72,13 +70,23 @@ namespace RawVision.Views
         private void New_Click(object sender, RoutedEventArgs e)
         {
             InitializeComponent();
+            Style = (Style)FindResource(typeof(Window));
+            // Set the DataContext to the MainViewModel
             var viewModel = new MainViewModel();
             this.DataContext = viewModel;
 
             this.PreviewKeyDown += MainWindow_PreviewKeyDown;
 
+            viewModel.ChromatogramPlot.Name = "ChromatogramPlot";
+            viewModel.SpectrumPlot.Name = "SpectrumPlot";
+
             ChromatogramContainer.Children.Add(viewModel.ChromatogramPlot);
             SpectrumContainer.Children.Add(viewModel.SpectrumPlot);
+
+            viewModel.ChromatogramPlot.PreviewKeyDown += WpfPlot_KeyDown;
+            viewModel.SpectrumPlot.PreviewKeyDown += WpfPlot_KeyDown;
+            viewModel.SpectrumViewModel.PropertyChanged += SpectrumViewModel_OnPropertyChanged;
+            PlotSettings.Instance.ResetOnNewClick();
         }
 
         public void IncrementScanNumber(object sender, RoutedEventArgs e)
@@ -126,15 +134,9 @@ namespace RawVision.Views
             }
         }
 
-        public void ChangeMassResolution(object sender, RoutedEventArgs e)
+        private void WpfPlot_CtrlKeyDown(object sender, KeyEventArgs e)
         {
-            var DC = DataContext as MainViewModel;
-            ResolutionDialogue dialog = new ResolutionDialogue(DC.MassResolutionDecimal);
-            if (dialog.ShowDialog() == true)
-            {
-                DC.MassResolutionDecimal = dialog.SelectedNumber;
-                DC.MassResolutionChanged();
-            }
+            //
         }
 
         public void ChangeMapScaling(object sender, RoutedEventArgs e)
@@ -167,9 +169,9 @@ namespace RawVision.Views
             }
         }
 
-        private void ChangeMassRangeLimit(object sender, RoutedEventArgs e)
+        private void ChangeWavelengthRange(object sender, RoutedEventArgs e)
         {
-            LimitMassRangeView dialog = new LimitMassRangeView();
+            LimitWavelengthRangeView dialog = new LimitWavelengthRangeView();
             if (dialog.ShowDialog() == true)
             {
 

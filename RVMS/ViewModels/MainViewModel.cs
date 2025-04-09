@@ -4,10 +4,10 @@ using System.Windows.Input;
 using Microsoft.Win32;
 using ScottPlot.WPF;
 using ScottPlot;
-using RawVision.Models;
-using RawVision.Views;
+using RVMS.Models;
+using RVMS.Views;
 
-namespace RawVision.ViewModels
+namespace RVMS.ViewModels
 {
     /*------------------------------------------------------------------------------------------------------------
      *                                                MainViewModel                                              *
@@ -72,6 +72,7 @@ namespace RawVision.ViewModels
             LoadFileCommand = new RelayCommand(LoadFilePressed);
             SaveDataCommand = new RelayCommand(SaveDataPressed);
             Command_ShowPeakList = new RelayCommand(ShowPeakListPressed);
+            Command_ImportSpectrum = new RelayCommand(ImportSpectrumPressed);
 
             // Initialize the ViewModels for both plots
             ChromatogramViewModel = new ChromatogramViewModel();
@@ -81,6 +82,7 @@ namespace RawVision.ViewModels
             _plotModel.PropertyChanged += PropertyChanged;
 
             PlotSettings.Instance.PropertyChanged += PlotSettings_PropertyChanged;
+            PlotSettings.Instance.Spectrum.ResetImportedSpectrum();
         }
 
 
@@ -134,7 +136,7 @@ namespace RawVision.ViewModels
                 if (value != _massResolutionDecimal)
                 {
                     _massResolutionDecimal = value;
-                    _spectrumViewModel.SetMassResolution(value);
+                    //_spectrumViewModel.SetMassResolution(value);
                     OnPropertyChanged(nameof(MassResolutionDecimal));
                 }
             }
@@ -182,7 +184,7 @@ namespace RawVision.ViewModels
 
         private void Plot2DChromatogram()
         {
-            if (_spectrumViewModel.Intensities2D == null)
+            if (_spectrumViewModel.IntensityList.Count == 0)
             {
                 return;
             }
@@ -202,36 +204,26 @@ namespace RawVision.ViewModels
                     Plot2DChromatogram();
                     break;
             }
+
+            CheckUpdateOptionsWindow();
         }
 
-        private double[,] RemoveLowIntensityRows(double[,] array, double multiplier)
+        private void CheckUpdateOptionsWindow()
         {
-            int rows = array.GetLength(0);
-            int cols = array.GetLength(1);
-
-            // Find the max value in the entire array
-            double globalMax = array.Cast<double>().Max();
-            double threshold = multiplier * globalMax;
-
-            // Identify rows where max(row) >= threshold
-            var validRows = Enumerable.Range(0, rows)
-                .Where(r => Enumerable.Range(0, cols)
-                    .Max(c => array[r, c]) >= threshold)
-                .ToArray();
-
-            // Create new array with only valid rows
-            double[,] result = new double[validRows.Length, cols];
-
-            for (int i = 0; i < validRows.Length; i++)
+            foreach (Window window in Application.Current.Windows)
             {
-                for (int j = 0; j < cols; j++)
+                if (window is ChromatogramOptionsView chromatogramOptionsView)
                 {
-                    result[i, j] = array[validRows[i], j];
+                    var limits = _chromatogramPlot.Plot.Axes.GetLimits();
+                    PlotSettings.Instance.Chromatogram.XMin = limits.XRange.Min;
+                    PlotSettings.Instance.Chromatogram.XMax = limits.XRange.Max;
+                    PlotSettings.Instance.Chromatogram.YMin = limits.YRange.Min;
+                    PlotSettings.Instance.Chromatogram.YMax = limits.YRange.Max;
+                    chromatogramOptionsView.CheckValuesUpdatedExternally();
                 }
             }
-
-            return result;
         }
+
 
         public void ScalingMethodChanged()
         {
@@ -240,8 +232,10 @@ namespace RawVision.ViewModels
             {
                 return;
             }
-
+            
+            PlotSettings.Instance.Chromatogram.ResetColorLimit_NoNotify();
             Plot2DChromatogram();
+            CheckUpdateOptionsWindow();
         }
 
         public int GetScanNumberFromRetentionTime(double rt)
@@ -287,7 +281,7 @@ namespace RawVision.ViewModels
         public ICommand SaveDataCommand { get; }
         public void SaveDataPressed()
         {
-            _ioModel.WriteDataToCsv(_spectrumViewModel.UniqueMasses,_chromatogramViewModel.Times,_spectrumViewModel.Intensities2D);
+            _ioModel.WriteDataToCsv(_spectrumViewModel.CombinedMasses,_chromatogramViewModel.Times,_spectrumViewModel.IntensityList.ToArray());
         }
         public ICommand OpenFileCommand { get; }
         public void OpenFile()
@@ -319,10 +313,16 @@ namespace RawVision.ViewModels
             }
 
             _currentScanNumber = 1;
-            _ioModel.OpenRawFile(SelectedFilePath);
+            int rfExists = _ioModel.OpenRawFile(SelectedFilePath);
+
+            if (rfExists == 0)
+            {
+                Mouse.OverrideCursor = null;
+                return;
+            }
+
             var rf = _ioModel.GetRawFileFromIOModel();
             _chromatogramViewModel.SetRawFile(rf);
-            _spectrumViewModel.SetMassResolution(MassResolutionDecimal);
 
             _spectrumViewModel.SetRawFile(rf);
 
@@ -339,15 +339,19 @@ namespace RawVision.ViewModels
                     break;
             }
 
-            _plotModel.PlotMassSpectrum();
+            _plotModel.PlotSpectrum();
 
             Mouse.OverrideCursor = null;
-            //HandleLoadingPopup("Stop");
         }
 
         public ICommand Command_ShowPeakList { get; }
         public void ShowPeakListPressed()
         {
+            if (ChromatogramViewModel.Times == null)
+            {
+                MessageBox.Show("No data to display!","No Spectra",MessageBoxButton.OK,MessageBoxImage.Error);
+                return;
+            }
             Mouse.OverrideCursor = Cursors.Wait;
             PeakListWindow window = new PeakListWindow();
             double rt = Math.Round(ChromatogramViewModel.Times[PlotSettings.Instance.ScanNumber - 1],2);
@@ -355,6 +359,32 @@ namespace RawVision.ViewModels
             window.dataGrid.ItemsSource = SpectrumViewModel.CreatePeakList(PlotSettings.Instance.ScanNumber - 1);
             Mouse.OverrideCursor = null;
             window.Show();
+        }
+
+        public ICommand Command_ImportSpectrum { get; }
+        public void ImportSpectrumPressed()
+        {
+            OpenFileDialog openFileDialog = new OpenFileDialog
+            {
+                Title = "Select a File",
+                Filter = "CSV Files|*.csv;*.CSV",
+                Multiselect = false
+            };
+            if (openFileDialog.ShowDialog() == true)
+            {
+                string filePath = openFileDialog.FileName;
+                //MessageBox.Show($"Selected file: {filePath}");
+                (double[] x, double[] y) = IOModel.LoadCsvColumns(filePath);
+                _spectrumViewModel.AddImportedSpectrum(x,y);
+                _plotModel.PlotImportedSpectrum(filePath);
+                PlotSettings.Instance.Spectrum.SetImportedSpectrumPath(filePath);
+            }
+
+            var window = Application.Current.Windows.OfType<SpectrumOptionsView>().FirstOrDefault();
+            if (window != null)
+            {
+                window.UpdateLayout();
+            }
         }
 
 
