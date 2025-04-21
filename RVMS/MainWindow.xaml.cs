@@ -146,6 +146,17 @@ namespace RVMS.Views
             //
         }
 
+        public void ChangeMassResolution(object sender, RoutedEventArgs e)
+        {
+            var DC = DataContext as MainViewModel;
+            ResolutionDialogue dialog = new ResolutionDialogue(DC.MassResolutionDecimal);
+            if (dialog.ShowDialog() == true)
+            {
+                DC.MassResolutionDecimal = dialog.SelectedNumber;
+                DC.MassResolutionChanged();
+            }
+        }
+
         public void ChangeMapScaling(object sender, RoutedEventArgs e)
         {
             var DC = DataContext as MainViewModel;

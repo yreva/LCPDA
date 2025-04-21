@@ -203,7 +203,7 @@ namespace RVMS.Models
             using (StreamWriter writer = new StreamWriter(i))
             {
                 int rows = intensity.GetLength(0);
-                int cols = intensity.GetLength(1);
+                int cols = intensity[0].GetLength(0);
 
                 for (int j = 0; j < rows; j++)
                 {

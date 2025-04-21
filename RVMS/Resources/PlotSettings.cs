@@ -97,6 +97,7 @@ namespace RVMS
         public void ResetOnNewClick()
         {
             _scanNumber = 1;
+            Chromatogram.Style = "Line";
         }
     }
 

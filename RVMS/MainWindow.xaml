@@ -26,6 +26,7 @@
             <MenuItem Header="_Settings">
                 <MenuItem Header="Map Scaling" Click="ChangeMapScaling"/>
                 <MenuItem Header="Colormap" Click="ChangeColormap"/>
+                <MenuItem Header="Mass Resolution" Click="ChangeMassResolution"/>
                 <MenuItem Header="Mass Range" Click="ChangeMassRange"/>
             </MenuItem>
             <MenuItem Header="_Help">

@@ -149,7 +149,7 @@ namespace RVMS.ViewModels
                 if (value != _massResolutionDecimal)
                 {
                     _massResolutionDecimal = value;
-                    //_spectrumViewModel.SetMassResolution(value);
+                    _spectrumViewModel.SetMassResolution(value);
                     OnPropertyChanged(nameof(MassResolutionDecimal));
                 }
             }
@@ -161,7 +161,10 @@ namespace RVMS.ViewModels
             // Initialize the ViewModels for both plots
             ChromatogramViewModel = new ChromatogramViewModel();
             SpectrumViewModel = new SpectrumViewModel();
-            LoadFilePressed();
+            if (SelectedFilePath != null)
+            {
+                LoadFilePressed();
+            }
         }
 
 
@@ -275,7 +278,7 @@ namespace RVMS.ViewModels
         public ICommand SaveDataCommand { get; }
         public void SaveDataPressed()
         {
-            _ioModel.WriteDataToCsv(_spectrumViewModel.CombinedMasses,_chromatogramViewModel.Times,_spectrumViewModel.IntensityList.ToArray());
+            _ioModel.WriteDataToCsv(_spectrumViewModel.CombinedMasses,_chromatogramViewModel.Times,_spectrumViewModel.Intensity2D.ToArray());
         }
         public ICommand OpenFileCommand { get; }
         public void OpenFile()
@@ -303,6 +306,8 @@ namespace RVMS.ViewModels
 
             if (SelectedFilePath == null)
             {
+                Mouse.OverrideCursor = null;
+                MessageBox.Show("There is something wrong with the input file path");
                 return;
             }
 

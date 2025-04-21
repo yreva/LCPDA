@@ -97,6 +97,7 @@ namespace RVPDA
         public void ResetOnNewClick()
         {
             _scanNumber = 1;
+            Chromatogram.Style = "Line";
         }
     }
 
