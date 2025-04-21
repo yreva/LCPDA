@@ -1,8 +1,4 @@
-﻿using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Formats.Tar;
-using System.Windows;
-using ScottPlot;
+﻿using System.ComponentModel;
 using ThermoFisher.CommonCore.Data.Business;
 using ThermoFisher.CommonCore.Data.Interfaces;
 

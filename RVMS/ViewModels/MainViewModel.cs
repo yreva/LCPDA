@@ -75,14 +75,27 @@ namespace RVMS.ViewModels
             Command_ImportSpectrum = new RelayCommand(ImportSpectrumPressed);
 
             // Initialize the ViewModels for both plots
-            ChromatogramViewModel = new ChromatogramViewModel();
-            SpectrumViewModel = new SpectrumViewModel();
+            _chromatogramViewModel = new ChromatogramViewModel();
+            _spectrumViewModel = new SpectrumViewModel();
             _ioModel = new IOModel();
             _plotModel = new PlotModel(_chromatogramPlot,_spectrumPlot, _chromatogramViewModel, _spectrumViewModel);
             _plotModel.PropertyChanged += PropertyChanged;
 
             PlotSettings.Instance.PropertyChanged += PlotSettings_PropertyChanged;
             PlotSettings.Instance.Spectrum.ResetImportedSpectrum();
+        }
+
+        //                       Destructor for MainViewModel
+        /******************************************************************************/
+        public void UnsubscribeMainViewModel()
+        {
+            //_plotModel.UnsubscribePlotModel();
+            _chromatogramViewModel = null;
+            _spectrumViewModel = null;
+            _ioModel = null;
+            _plotModel.PropertyChanged -= PropertyChanged;
+            PlotSettings.Instance.PropertyChanged -= PlotSettings_PropertyChanged;
+            _plotModel = null;
         }
 
 

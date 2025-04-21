@@ -1,14 +1,9 @@
 ﻿using System.ComponentModel;
-using System.Drawing;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using RVMS.ViewModels;
-using ScottPlot;
-using ScottPlot.WPF;
-using ThermoFisher.CommonCore.Data.Business;
-using HorizontalAlignment = System.Windows.HorizontalAlignment;
-using VerticalAlignment = System.Windows.VerticalAlignment;
+
 
 namespace RVMS.Views
 {
@@ -71,6 +66,15 @@ namespace RVMS.Views
         {
             InitializeComponent();
             Style = (Style)FindResource(typeof(Window));
+
+            if (this.DataContext is MainViewModel oldViewModel)
+            {
+                oldViewModel.ChromatogramPlot.PreviewKeyDown -= WpfPlot_KeyDown;
+                oldViewModel.SpectrumPlot.PreviewKeyDown -= WpfPlot_KeyDown;
+                oldViewModel.SpectrumViewModel.PropertyChanged -= SpectrumViewModel_OnPropertyChanged;
+                oldViewModel.UnsubscribeMainViewModel();
+            }
+
             // Set the DataContext to the MainViewModel
             var viewModel = new MainViewModel();
             this.DataContext = viewModel;
@@ -79,6 +83,9 @@ namespace RVMS.Views
 
             viewModel.ChromatogramPlot.Name = "ChromatogramPlot";
             viewModel.SpectrumPlot.Name = "SpectrumPlot";
+
+            ChromatogramContainer.Children.Clear();
+            SpectrumContainer.Children.Clear();
 
             ChromatogramContainer.Children.Add(viewModel.ChromatogramPlot);
             SpectrumContainer.Children.Add(viewModel.SpectrumPlot);

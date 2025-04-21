@@ -197,6 +197,27 @@ namespace RVMS.Models
             //DisablePlotBenchmarking();
         }
 
+        public void UnsubscribePlotModel()
+        {
+            _chromatogramPlot = null;
+            _spectrumPlot = null;
+
+            _chromatogramPlot.Plot.Benchmark = null;
+            _spectrumPlot.Plot.Benchmark = null;
+
+            _chromatogramViewModel = null;
+            _spectrumViewModel = null;
+
+            PlotSettings.Instance.PropertyChanged -= PlotSettings_PropertyChanged;
+            PlotSettings.Instance.Chromatogram.PropertyChanged -= PlotSettings_ChromatogramPropertyChanged;
+            PlotSettings.Instance.Spectrum.PropertyChanged -= PlotSettings_SpectrumPropertyChanged;
+
+            _chromatogramPlot.MouseDown -= ChromPlot_MouseDown;
+            _chromatogramPlot.MouseDoubleClick -= ChromPlot_MouseDoubleClick;
+            _spectrumPlot.MouseDoubleClick -= SpectrumPlot_MouseDoubleClick;
+
+        }
+
 
         //           Helper methods for properties changed in double-click window
         /******************************************************************************/
@@ -420,6 +441,7 @@ namespace RVMS.Models
 
             _chromatogramPlot.Refresh();
         }
+
         private void PlotLog10AbsorbanceMap()
         {
             double[] x;
@@ -453,16 +475,6 @@ namespace RVMS.Models
             double hmRangeMax = PlotSettings.Instance.Chromatogram.ColorMax;
             hm.ManualRange = new Range(hmRangeMin, hmRangeMax);
 
-
-            // set manual color range if it has been set
-            //if (!double.IsNaN(PlotSettings.Instance.Chromatogram.ColorMin) &&
-            //    !double.IsNaN(PlotSettings.Instance.Chromatogram.ColorMax) &&
-            //    PlotSettings.Instance.Chromatogram.ColorMax > PlotSettings.Instance.Chromatogram.ColorMin)
-            //{
-            //    hm.ManualRange = new Range(PlotSettings.Instance.Chromatogram.ColorMin,
-            //        PlotSettings.Instance.Chromatogram.ColorMax);
-            //}
-
             // add colorbar if it doesn't exist, else redirect its source
             if (_colorbar == null)
             {
@@ -490,6 +502,7 @@ namespace RVMS.Models
 
             _chromatogramPlot.Refresh();
         }
+
         public void PlotSpectrum()
         {
             if (_spectrumViewModel.CombinedMasses.Count() == 0)
