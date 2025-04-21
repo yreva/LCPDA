@@ -17,11 +17,11 @@ using ScottPlot;
 namespace RVMS.Views
 {
     /// <summary>
-    /// Interaction logic for LimitWavelengthRangeView.xaml
+    /// Interaction logic for LimitMassRangeView.xaml
     /// </summary>
-    public partial class LimitWavelengthRangeView : Window
+    public partial class LimitMassRangeView : Window
     {
-        public LimitWavelengthRangeView()
+        public LimitMassRangeView()
         {
             InitializeComponent();
             if (PlotSettings.Instance.WavelengthRangeLimitEnabled)

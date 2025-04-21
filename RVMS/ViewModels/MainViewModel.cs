@@ -89,7 +89,7 @@ namespace RVMS.ViewModels
         /******************************************************************************/
         public void UnsubscribeMainViewModel()
         {
-            //_plotModel.UnsubscribePlotModel();
+            _plotModel.UnsubscribePlotModel();
             _chromatogramViewModel = null;
             _spectrumViewModel = null;
             _ioModel = null;
@@ -164,25 +164,6 @@ namespace RVMS.ViewModels
             LoadFilePressed();
         }
 
-        private void HandleLoadingPopup(string process)
-        {
-            if (process == "Start")
-            {
-                Application.Current.Dispatcher.Invoke(() =>
-                {
-                    ProgressWindow progressWindow = new ProgressWindow();
-                    progressWindow.Show();
-                });
-            }
-            else if (process == "Stop")
-            {
-                var window = Application.Current.Windows.OfType<ProgressWindow>().FirstOrDefault();
-                Application.Current.Dispatcher.Invoke(() =>
-                {
-                    //window.CloseWindow();
-                });
-            }
-        }
 
         private string _selectedFilePath;
         public string SelectedFilePath

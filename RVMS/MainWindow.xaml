@@ -26,7 +26,7 @@
             <MenuItem Header="_Settings">
                 <MenuItem Header="Map Scaling" Click="ChangeMapScaling"/>
                 <MenuItem Header="Colormap" Click="ChangeColormap"/>
-                <MenuItem Header="Wavelength Range" Click="ChangeWavelengthRange"/>
+                <MenuItem Header="Mass Range" Click="ChangeMassRange"/>
             </MenuItem>
             <MenuItem Header="_Help">
                 <MenuItem Header="About" Click="About_Click"/>

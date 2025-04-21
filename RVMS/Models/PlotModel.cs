@@ -156,11 +156,11 @@ namespace RVMS.Models
 
         //                              Class variables
         /******************************************************************************/
-        private WpfPlot _chromatogramPlot;                    // Chromatogram Plot
-        private WpfPlot _spectrumPlot;                        // Spectrum Plot
-        private ScottPlot.Panels.ColorBar _colorbar;          // Colorbar (cannot be retrieved from plot, so have to keep reference)
-        private ChromatogramViewModel _chromatogramViewModel; // Chromatogram data
-        private SpectrumViewModel _spectrumViewModel;         // Spectrum data
+        private WpfPlot _chromatogramPlot;                       // Chromatogram Plot
+        private WpfPlot _spectrumPlot;                           // Spectrum Plot
+        private ScottPlot.Panels.ColorBar _colorbar;             // Colorbar (cannot be retrieved from plot, so have to keep reference)
+        private ChromatogramViewModel _chromatogramViewModel;    // Chromatogram data
+        private SpectrumViewModel _spectrumViewModel;            // Spectrum data
 
         private IColormap _colormap;
         public IColormap Colormap
@@ -199,9 +199,6 @@ namespace RVMS.Models
 
         public void UnsubscribePlotModel()
         {
-            _chromatogramPlot = null;
-            _spectrumPlot = null;
-
             _chromatogramPlot.Plot.Benchmark = null;
             _spectrumPlot.Plot.Benchmark = null;
 
@@ -216,6 +213,8 @@ namespace RVMS.Models
             _chromatogramPlot.MouseDoubleClick -= ChromPlot_MouseDoubleClick;
             _spectrumPlot.MouseDoubleClick -= SpectrumPlot_MouseDoubleClick;
 
+            _chromatogramPlot = null;
+            _spectrumPlot = null;
         }
 
 
@@ -774,6 +773,7 @@ namespace RVMS.Models
             // auto was false, so scale manually.
             SetSpectrumManualLimits("X");
         }
+
         private void ResetSpectrumScalingY(bool auto)
         {
             if (auto)

@@ -176,9 +176,9 @@ namespace RVMS.Views
             }
         }
 
-        private void ChangeWavelengthRange(object sender, RoutedEventArgs e)
+        private void ChangeMassRange(object sender, RoutedEventArgs e)
         {
-            LimitWavelengthRangeView dialog = new LimitWavelengthRangeView();
+            LimitMassRangeView dialog = new LimitMassRangeView();
             if (dialog.ShowDialog() == true)
             {
 
