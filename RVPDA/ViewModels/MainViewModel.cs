@@ -85,6 +85,19 @@ namespace RVPDA.ViewModels
             PlotSettings.Instance.Spectrum.ResetImportedSpectrum();
         }
 
+        //                       Destructor for MainViewModel
+        /******************************************************************************/
+        public void UnsubscribeMainViewModel()
+        {
+            _plotModel.UnsubscribePlotModel();
+            _chromatogramViewModel = null;
+            _spectrumViewModel = null;
+            _ioModel = null;
+            _plotModel.PropertyChanged -= PropertyChanged;
+            PlotSettings.Instance.PropertyChanged -= PlotSettings_PropertyChanged;
+            _plotModel = null;
+        }
+
 
         private int _currentScanNumber = 1;
         public int CurrentScanNumber

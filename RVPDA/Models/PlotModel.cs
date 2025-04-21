@@ -197,6 +197,26 @@ namespace RVPDA.Models
             //DisablePlotBenchmarking();
         }
 
+        public void UnsubscribePlotModel()
+        {
+            _chromatogramPlot.Plot.Benchmark = null;
+            _spectrumPlot.Plot.Benchmark = null;
+
+            _chromatogramViewModel = null;
+            _spectrumViewModel = null;
+
+            PlotSettings.Instance.PropertyChanged -= PlotSettings_PropertyChanged;
+            PlotSettings.Instance.Chromatogram.PropertyChanged -= PlotSettings_ChromatogramPropertyChanged;
+            PlotSettings.Instance.Spectrum.PropertyChanged -= PlotSettings_SpectrumPropertyChanged;
+
+            _chromatogramPlot.MouseDown -= ChromPlot_MouseDown;
+            _chromatogramPlot.MouseDoubleClick -= ChromPlot_MouseDoubleClick;
+            _spectrumPlot.MouseDoubleClick -= SpectrumPlot_MouseDoubleClick;
+
+            _chromatogramPlot = null;
+            _spectrumPlot = null;
+        }
+
 
         //           Helper methods for properties changed in double-click window
         /******************************************************************************/

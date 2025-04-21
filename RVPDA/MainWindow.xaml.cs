@@ -71,6 +71,15 @@ namespace RVPDA.Views
         {
             InitializeComponent();
             Style = (Style)FindResource(typeof(Window));
+
+            if (this.DataContext is MainViewModel oldViewModel)
+            {
+                oldViewModel.ChromatogramPlot.PreviewKeyDown -= WpfPlot_KeyDown;
+                oldViewModel.SpectrumPlot.PreviewKeyDown -= WpfPlot_KeyDown;
+                oldViewModel.SpectrumViewModel.PropertyChanged -= SpectrumViewModel_OnPropertyChanged;
+                oldViewModel.UnsubscribeMainViewModel();
+            }
+
             // Set the DataContext to the MainViewModel
             var viewModel = new MainViewModel();
             this.DataContext = viewModel;
@@ -79,6 +88,9 @@ namespace RVPDA.Views
 
             viewModel.ChromatogramPlot.Name = "ChromatogramPlot";
             viewModel.SpectrumPlot.Name = "SpectrumPlot";
+
+            ChromatogramContainer.Children.Clear();
+            SpectrumContainer.Children.Clear();
 
             ChromatogramContainer.Children.Add(viewModel.ChromatogramPlot);
             SpectrumContainer.Children.Add(viewModel.SpectrumPlot);
