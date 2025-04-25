@@ -149,7 +149,7 @@ namespace RVMS.ViewModels
                 if (value != _massResolutionDecimal)
                 {
                     _massResolutionDecimal = value;
-                    _spectrumViewModel.SetMassResolution(value);
+                    //_spectrumViewModel.SetMassResolution(value);
                     OnPropertyChanged(nameof(MassResolutionDecimal));
                 }
             }
@@ -161,6 +161,7 @@ namespace RVMS.ViewModels
             // Initialize the ViewModels for both plots
             ChromatogramViewModel = new ChromatogramViewModel();
             SpectrumViewModel = new SpectrumViewModel();
+            SpectrumViewModel.SetMassResolution(MassResolutionDecimal);
             if (SelectedFilePath != null)
             {
                 LoadFilePressed();
