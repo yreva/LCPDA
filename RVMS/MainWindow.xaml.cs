@@ -152,6 +152,8 @@ namespace RVMS.Views
             ResolutionDialogue dialog = new ResolutionDialogue(DC.MassResolutionDecimal);
             if (dialog.ShowDialog() == true)
             {
+                New_Click(sender,e);
+                DC = DataContext as MainViewModel;
                 DC.MassResolutionDecimal = dialog.SelectedNumber;
                 DC.MassResolutionChanged();
             }

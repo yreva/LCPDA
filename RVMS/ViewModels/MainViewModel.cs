@@ -158,9 +158,6 @@ namespace RVMS.ViewModels
 
         public void MassResolutionChanged()
         {
-            // Initialize the ViewModels for both plots
-            ChromatogramViewModel = new ChromatogramViewModel();
-            SpectrumViewModel = new SpectrumViewModel();
             SpectrumViewModel.SetMassResolution(MassResolutionDecimal);
             if (SelectedFilePath != null)
             {
