@@ -140,7 +140,7 @@ namespace RVPDA.ViewModels
             for (int sn = firstScanNumber; sn <= lastScanNumber; sn++)
             {
                 var stats = _rawFile.GetScanStatsForScanNumber(sn);
-                var scan = _rawFile.GetSegmentedScanFromScanNumber(sn);
+                var scan = _rawFile.GetSegmentedScanFromScanNumber(sn,stats);
                 times[i] = _rawFile.RetentionTimeFromScanNumber(sn);
 
                 if (sn == 1)

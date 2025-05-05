@@ -7,8 +7,8 @@
       <Nullable>enable</Nullable>
       <ImplicitUsings>enable</ImplicitUsings>
       <UseWPF>true</UseWPF>
-      <ApplicationIcon>Resources\Images\rawvision_pda.ico</ApplicationIcon>
-      <AssemblyName>RawVisionPDA</AssemblyName>
+      <ApplicationIcon>Resources\Images\rawvision_ms.ico</ApplicationIcon>
+      <AssemblyName>RawVisionMS</AssemblyName>
       <BaseOutputPath>..\RawVisionBuild</BaseOutputPath>
 	  <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
@@ -22,7 +22,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="Resources\Images\rawvision_pda.ico" />
+    <Content Include="Resources\Images\rawvision_ms.ico" />
   </ItemGroup>
 
 <ItemGroup>

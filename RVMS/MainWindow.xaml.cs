@@ -29,7 +29,10 @@ namespace RVMS.Views
             viewModel.SpectrumPlot.PreviewKeyDown += WpfPlot_KeyDown;
             viewModel.ChromatogramPlot.KeyDown += WpfPlot_CtrlKeyDown;
             viewModel.SpectrumViewModel.PropertyChanged += SpectrumViewModel_OnPropertyChanged;
+            _spectrumViewModel = viewModel.SpectrumViewModel;
         }
+
+        private SpectrumViewModel _spectrumViewModel;
 
         private void MainWindow_PreviewKeyDown(object sender, KeyEventArgs e)
         {
@@ -39,10 +42,20 @@ namespace RVMS.Views
         {
             switch (e.PropertyName)
             {
+
+                case "Polarity":
+                    Info_Polarity.Text = (sender as SpectrumViewModel).Polarity;
+                    break;
                 case "NumberOfScans":
                     Info_NumberOfScans.Text = (sender as SpectrumViewModel).NumberOfScans;
                     break;
             }
+        }
+
+
+        private async void SpectrumViewModel_LoadProgress()
+        {
+
         }
 
         private void TextBox_KeyDown(object sender, KeyEventArgs e)
@@ -67,11 +80,14 @@ namespace RVMS.Views
             InitializeComponent();
             Style = (Style)FindResource(typeof(Window));
 
+            int massResolution = 0;
+
             if (this.DataContext is MainViewModel oldViewModel)
             {
                 oldViewModel.ChromatogramPlot.PreviewKeyDown -= WpfPlot_KeyDown;
                 oldViewModel.SpectrumPlot.PreviewKeyDown -= WpfPlot_KeyDown;
                 oldViewModel.SpectrumViewModel.PropertyChanged -= SpectrumViewModel_OnPropertyChanged;
+                massResolution = oldViewModel.MassResolutionDecimal;
                 oldViewModel.UnsubscribeMainViewModel();
             }
 
@@ -83,6 +99,8 @@ namespace RVMS.Views
 
             viewModel.ChromatogramPlot.Name = "ChromatogramPlot";
             viewModel.SpectrumPlot.Name = "SpectrumPlot";
+
+            viewModel.MassResolutionDecimal = massResolution;
 
             ChromatogramContainer.Children.Clear();
             SpectrumContainer.Children.Clear();
@@ -152,9 +170,11 @@ namespace RVMS.Views
             ResolutionDialogue dialog = new ResolutionDialogue(DC.MassResolutionDecimal);
             if (dialog.ShowDialog() == true)
             {
+                string filePath = DC.SelectedFilePath;
                 New_Click(sender,e);
                 DC = DataContext as MainViewModel;
                 DC.MassResolutionDecimal = dialog.SelectedNumber;
+                DC.SelectedFilePath = filePath;
                 DC.MassResolutionChanged();
             }
         }

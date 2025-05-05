@@ -117,6 +117,23 @@ namespace RVMS.ViewModels
             }
         }
 
+        private int _progressValue;
+        private int _loadProgress;
+        public int ProgressValue
+        {
+            get => _progressValue;
+            set
+            {
+                _progressValue = value;
+                OnPropertyChanged(nameof(ProgressValue));
+                //OnPropertyChanged(nameof(ProgressText));
+                if (_progressValue == 0)
+                {
+                    _loadProgress = 0;
+                }
+            }
+        }
+
         public ObservableCollection<ObservableCollection<DataRow>> PeakLists
         {
             get => _peakLists;
@@ -136,6 +153,8 @@ namespace RVMS.ViewModels
             scanNumbers = new List<int>();
 
             PeakLists = new ObservableCollection<ObservableCollection<DataRow>>();
+
+            ProgressValue = 0;
         }
 
         public void SetRawFile(IRawDataExtended rf)
@@ -158,7 +177,7 @@ namespace RVMS.ViewModels
             for (int sn = firstScanNumber; sn <= lastScanNumber; sn++)
             {
                 var stats = _rawFile.GetScanStatsForScanNumber(sn);
-                var scan = _rawFile.GetSegmentedScanFromScanNumber(sn);
+                var scan = _rawFile.GetSegmentedScanFromScanNumber(sn,stats);
                 times[i] = _rawFile.RetentionTimeFromScanNumber(sn);
 
                 if (sn == 1)
@@ -212,6 +231,8 @@ namespace RVMS.ViewModels
 
         private async void GetMassSpectra()
         {
+            ReportProgress(0);
+
             List<int> massSpectraIdx = new List<int>();
 
             allMassesRaw = new List<double[]>();
@@ -252,6 +273,8 @@ namespace RVMS.ViewModels
                 // this rounds and adds to the mz,intensity lists...
                 RoundMassesToDecimal(data, roundToDecimal);
 
+                ReportProgress(10);
+
                 scanNumbers.Add(i);
             }
 
@@ -280,6 +303,9 @@ namespace RVMS.ViewModels
         public async Task<(List<double>, List<double[]>, List<double[]>)> ProcessIntensityMatrixAsync(
             List<double[]> massLists, List<double[]> intensityLists, int numScans)
         {
+            int stepsToGo;
+            int thisStep;
+
             // Step 1: Find all unique mz values
             HashSet<double> uniqueMzSet = new HashSet<double>(massLists.SelectMany(x => x));
             List<double> uniqueMZ = uniqueMzSet.OrderBy(x => x).ToList();
@@ -294,6 +320,8 @@ namespace RVMS.ViewModels
                 intensityVsTime[i] = new double[numRows];
                 logIntensityVsTime[i] = new double[numRows];
             });
+
+            Application.Current.Dispatcher.Invoke(() => { ReportProgress(25); });
 
             // Step 3: Use a ConcurrentDictionary to store intensity data
             ConcurrentDictionary<int, double[]> intensityStorage = new ConcurrentDictionary<int, double[]>();
@@ -329,6 +357,8 @@ namespace RVMS.ViewModels
                 });
             });
 
+            Application.Current.Dispatcher.Invoke(() => { ReportProgress(50); });
+            int i = 0;
             // Step 6: Copy from ConcurrentDictionary to final double[,]
             foreach (var kvp in intensityStorage)
             {
@@ -349,7 +379,11 @@ namespace RVMS.ViewModels
                         maxIntensityRaw = rowValues[col];
                     }
                 }
+                Application.Current.Dispatcher.Invoke(() => { ReportProgress(50 + (int)(i / intensityStorage.Count)*50); });
+                i += 1;
             }
+
+            Application.Current.Dispatcher.Invoke(() => { ReportProgress(100); });
 
             MessageBox.Show(Application.Current.MainWindow, "Processing Finished, File Loaded.", "Loading Complete",
                 MessageBoxButton.OK, MessageBoxImage.Information);
@@ -361,6 +395,11 @@ namespace RVMS.ViewModels
             PlotSettings.Instance.Chromatogram.ColorMax = maxIntensityRaw;
 
             return (uniqueMZ, intensityVsTime, logIntensityVsTime);
+        }
+
+        private void ReportProgress(int pg)
+        {
+            ProgressValue = pg;
         }
 
         public void TrimDataToWavelengthRange()

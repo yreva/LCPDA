@@ -38,9 +38,8 @@
         <!-- Top Frame -->
         <StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="10" HorizontalAlignment="Center">
             <Button x:Name="SelectFileButton" Content="Select File" Width="100" FontSize="12" Command="{Binding OpenFileCommand}"/>
-            <TextBox x:Name="FilePathTextBox" Width="550" FontSize="12" Margin="5 0 5 0" Text="{Binding SelectedFilePath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-            <Button x:Name="ReadFileButton" Content="Load File" Width="100" FontSize="12" Command="{Binding LoadFileCommand}" IsEnabled="False"/>
-        </StackPanel>
+            <TextBox x:Name="FilePathTextBox" Width="650" FontSize="12" Margin="5 0 5 0" Text="{Binding SelectedFilePath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+            </StackPanel>
 
         <!-- Main Content Area (for Chromatogram and Spectrum Canvas) -->
         <Grid Margin="10,35,10,10">
