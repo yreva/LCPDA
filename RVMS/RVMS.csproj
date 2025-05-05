@@ -1,0 +1,84 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+      <OutputType>WinExe</OutputType>
+      <TargetFramework>net8.0-windows</TargetFramework>
+	  <RestorePackagesPath>..\RawVisionBuild\SharedPackages</RestorePackagesPath>
+      <Nullable>enable</Nullable>
+      <ImplicitUsings>enable</ImplicitUsings>
+      <UseWPF>true</UseWPF>
+      <ApplicationIcon>Resources\Images\rawvision_ms.ico</ApplicationIcon>
+      <AssemblyName>RawVisionMS</AssemblyName>
+      <BaseOutputPath>..\RawVisionBuild</BaseOutputPath>
+	  <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DebugType>embedded</DebugType>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DebugType>embedded</DebugType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="Resources\Images\rawvision_ms.ico" />
+  </ItemGroup>
+
+<ItemGroup>
+	<Reference Include="ThermoFisher.CommonCore.BackgroundSubtraction">
+		<HintPath>lib\ThermoFisher.CommonCore.BackgroundSubtraction.dll</HintPath>
+	</Reference>
+	<Reference Include="ThermoFisher.CommonCore.Data">
+		<HintPath>lib\ThermoFisher.CommonCore.Data.dll</HintPath>
+	</Reference>
+	<Reference Include="ThermoFisher.CommonCore.MassPrecisionEstimator">
+		<HintPath>lib\ThermoFisher.CommonCore.MassPrecisionEstimator.dll</HintPath>
+	</Reference>
+	<Reference Include="ThermoFisher.CommonCore.RawFileReader">
+		<HintPath>lib\ThermoFisher.CommonCore.RawFileReader.dll</HintPath>
+	</Reference>
+</ItemGroup>
+	
+
+	<ItemGroup>
+    <PackageReference Include="ScottPlot" Version="5.0.54" />
+    <PackageReference Include="ScottPlot.WPF" Version="5.0.54" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\Images\colormap_algae.png" />
+    <Resource Include="Resources\Images\colormap_blues.png" />
+    <Resource Include="Resources\Images\colormap_deep.png" />
+    <Resource Include="Resources\Images\colormap_dense.png" />
+    <Resource Include="Resources\Images\colormap_grayscale.png" />
+    <Resource Include="Resources\Images\colormap_ice.png" />
+    <Resource Include="Resources\Images\colormap_inferno.png" />
+    <Resource Include="Resources\Images\colormap_plasma.png" />
+    <Resource Include="Resources\Images\colormap_solar.png" />
+    <Resource Include="Resources\Images\colormap_thermal.png" />
+    <Resource Include="Resources\Images\colormap_turbo.png" />
+    <Resource Include="Resources\Images\colormap_viridis.png" />
+    <Resource Include="Resources\Images\daltonian_wide_small.png" />
+    <Resource Include="Resources\Images\rawvision.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Views\About.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Views\ChromatogramOptionsView.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Views\ColormapSettingsDialogue.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Views\PeakListWindow.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Views\SpectrumOptionsView.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,182 @@
+﻿<Window x:Class="RVPDA.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:RVPDA"
+        mc:Ignorable="d"
+        Title="RawVision - PDA Edition" Height="767" Width="950"
+        KeyboardNavigation.DirectionalNavigation="None"
+        Background="Gainsboro"
+        Closed="MainWindow_OnClosed">
+
+    <Window.Resources>
+        <local:EnumToBooleanConverter x:Key="EnumToBooleanConverter"/>
+    </Window.Resources>
+
+    <DockPanel>
+        <!-- Menu Bar -->
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="_File">
+                <MenuItem Header="New" Click="New_Click"/>
+                <!--<MenuItem Header="Open" Click="Open_Click"/>
+                <Separator/>
+                <MenuItem Header="Exit" Click="Exit_Click"/>-->
+            </MenuItem>
+            <MenuItem Header="_Settings">
+                <MenuItem Header="Map Scaling" Click="ChangeMapScaling"/>
+                <MenuItem Header="Colormap" Click="ChangeColormap"/>
+                <MenuItem Header="Wavelength Range" Click="ChangeWavelengthRange"/>
+            </MenuItem>
+            <MenuItem Header="_Help">
+                <MenuItem Header="About" Click="About_Click"/>
+            </MenuItem>
+
+        </Menu>
+
+        <Grid>
+        <!-- Top Frame -->
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="10" HorizontalAlignment="Center">
+            <Button x:Name="SelectFileButton" Content="Select File" Width="100" FontSize="12" Command="{Binding OpenFileCommand}"/>
+            <TextBox x:Name="FilePathTextBox" Width="650" FontSize="12" Margin="5 0 5 0" Text="{Binding SelectedFilePath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+            </StackPanel>
+
+        <!-- Main Content Area (for Chromatogram and Spectrum Canvas) -->
+        <Grid Margin="10,35,10,10">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="6*" />
+                <RowDefinition Height="8*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!-- First Frame (Chromatogram Canvas) -->
+            <Border BorderBrush="Black" BorderThickness="1" Grid.Row="0">
+                <!-- Placeholder for plot (use image or external control for actual plot) -->
+                <Grid x:Name="ChromatogramContainer" Margin="0,0,0,0"/>
+            </Border>
+
+            <!-- Second Frame (Settings Controls for Min RT, Max RT, etc.) -->
+            <Grid Grid.Row="1" Margin="0 5 0 5">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="4*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Border BorderBrush="Black" BorderThickness="1" Grid.Row="0">
+                    <!-- Placeholder for plot (use image or external control for actual plot) -->
+                    <Grid x:Name="SpectrumContainer"/>
+                </Border>
+
+                    <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="5 5 5 5" VerticalAlignment="Center">
+                            <!-- First row -->
+                            <GroupBox Header=" Chromatogram View " HorizontalAlignment="Stretch">
+                                <Grid HorizontalAlignment="Center">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <RadioButton Grid.Column="0" Margin="10 5 10 5" Content="Line" GroupName="ChromSetting" IsChecked="{Binding SelectedOption, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Line}"/>
+                                    <RadioButton Grid.Column="1" Margin="10 5 10 5" Content="Map" GroupName="ChromSetting" IsChecked="{Binding SelectedOption, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Map}"/>
+                                </Grid>
+                            </GroupBox>
+
+                            <!-- First row -->
+                            <TextBlock Text="" Height="10"/>
+
+                            <!-- Third row -->
+                            <Button Content="+ 10 Scans" HorizontalAlignment="Stretch" Margin="5" Click="IncrementScanNumber"/>
+
+                            <!-- Fourth row -->
+                            <Button Content="+ 1 Scan" HorizontalAlignment="Stretch" Margin="5" Click="IncrementScanNumber"/>
+
+                            <!-- Fifth row -->
+                            <Grid HorizontalAlignment="Center">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Scan #" VerticalAlignment="Center" Margin="5"/>
+                                <TextBox Grid.Row="0" Grid.Column="1" Name="IntEntryBox3" Width="100" Margin="5" Text="{Binding CurrentScanNumber}" KeyDown="TextBox_KeyDown"/>
+                            </Grid>
+
+                            <!-- Sixth row -->
+                            <Button Content="- 1 Scan" HorizontalAlignment="Stretch" Margin="5" Click="IncrementScanNumber"/>
+
+                            <!-- Seventh row -->
+                            <Button Content="- 10 Scans" HorizontalAlignment="Stretch" Margin="5" Click="IncrementScanNumber"/>
+
+                            <!-- Eighth row -->
+                            <TextBlock Text=""/>
+
+                            <!-- Ninth row -->
+                            <Button Content="Show Spectrum Table" Margin="5" Command="{Binding Command_ShowPeakList}"/>
+                            <Button Content="Import Spectrum" Margin="5 0" Command="{Binding Command_ImportSpectrum}">
+                                <Button.ToolTip>
+                                    <ToolTip Background="LightYellow" Foreground="Black">
+                                        <StackPanel>
+                                            <TextBlock Text="Import a spectrum from a CSV. Must be formatted with column 1 as x values and column 2 as y values, and no other columns. One row of headers are allowed." FontWeight="Bold"/>
+                                        </StackPanel>
+                                    </ToolTip>
+                                </Button.ToolTip>
+                            </Button>
+
+
+                            <TextBlock Text=""/>
+
+                            <GroupBox Header=" Scan Information " HorizontalAlignment="Stretch">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Margin="5 0" Text="Scan Filter:"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="0" Margin="5 0" Text="Scan Count:"/>
+                                    <TextBlock Grid.Row="0" Grid.Column="1" Margin="5 0" Name="Info_ScanFilter" Text="PDA"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="1" Margin="5 0" Name="Info_NumberOfScans"/>
+                                </Grid>
+                            </GroupBox>
+                        </StackPanel>
+                </ScrollViewer>
+
+</Grid>
+
+            <!-- Bottom Frame -->
+            <StackPanel Orientation="Horizontal" Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="10">
+                    <Button x:Name="SaveSpectrumButton" Content="Save Spectrum Figure" Width="150" FontSize="12" IsEnabled="False" ToolTipService.ShowOnDisabled="True">
+                    <Button.ToolTip>
+                        <ToolTip Background="LightYellow" Foreground="Black">
+                            <StackPanel>
+                                <TextBlock Text="To save a figure, right-click on the plot." FontWeight="Bold"/>
+                            </StackPanel>
+                        </ToolTip>
+                    </Button.ToolTip>
+                </Button>
+                    <Button x:Name="SaveChromatogramButton" Content="Save Chromatogram Figure" Width="200" FontSize="12" Margin="5 0 5 0" IsEnabled="False" ToolTipService.ShowOnDisabled="True">
+                    <Button.ToolTip>
+                        <ToolTip Background="LightYellow" Foreground="Black">
+                            <StackPanel>
+                                <TextBlock Text="To save a figure, right-click on the plot." FontWeight="Bold"/>
+                            </StackPanel>
+                        </ToolTip>
+                    </Button.ToolTip>
+                </Button>
+                <Button x:Name="SaveDataButton" Content="Save All Data as Text" Width="200" FontSize="12" Command="{Binding SaveDataCommand}"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+        
+    </DockPanel>
+</Window>
