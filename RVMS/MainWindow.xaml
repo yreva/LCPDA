@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:RVMS"
         mc:Ignorable="d"
-        Title="RawVision - MS Edition" Height="767" Width="950"
+        Title="RawVision 2.0 - MS Edition" Height="767" Width="950"
         KeyboardNavigation.DirectionalNavigation="None"
         Background="Gainsboro"
         Closed="MainWindow_OnClosed">
@@ -105,9 +105,12 @@
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Scan #" VerticalAlignment="Center" Margin="5"/>
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Scan #" VerticalAlignment="Center" Margin="5 5 5 0"/>
                                 <TextBox Grid.Row="0" Grid.Column="1" Name="IntEntryBox3" Width="100" Margin="5" Text="{Binding CurrentScanNumber}" KeyDown="TextBox_KeyDown"/>
                             </Grid>
+
+                            <!-- Fifth row B -->
+                            <TextBlock Text="{Binding CurrentRetentionTime}" HorizontalAlignment="Center"/>
 
                             <!-- Sixth row -->
                             <Button Content="- 1 Scan" HorizontalAlignment="Stretch" Margin="5" Click="IncrementScanNumber"/>
@@ -119,7 +122,7 @@
                             <TextBlock Text=""/>
 
                             <!-- Ninth row -->
-                            <Button Content="Show Peak List" Margin="5" Command="{Binding Command_ShowPeakList}"/>
+                            <Button Content="Show Peak List" Margin="5 0" Command="{Binding Command_ShowPeakList}"/>
                             <!--<Button Content="Import Spectrum" Margin="5 0" Command="{Binding Command_ImportSpectrum}">
                                 <Button.ToolTip>
                                     <ToolTip Background="LightYellow" Foreground="Black">

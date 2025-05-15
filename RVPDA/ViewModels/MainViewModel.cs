@@ -125,6 +125,20 @@ namespace RVPDA.ViewModels
 
                 _currentScanNumber = (int)value;
                 OnPropertyChanged(nameof(CurrentScanNumber));
+                OnPropertyChanged(nameof(CurrentRetentionTime));
+            }
+        }
+
+        public string CurrentRetentionTime
+        {
+            get
+            {
+                if (_chromatogramViewModel.Times == null)
+                {
+                    return "";
+                }
+                double rt = Math.Round(_chromatogramViewModel.Times[_currentScanNumber - 1], 2);
+                return string.Format("Retention Time: {0} min", rt);
             }
         }
 
@@ -294,7 +308,7 @@ namespace RVPDA.ViewModels
         public ICommand SaveDataCommand { get; }
         public void SaveDataPressed()
         {
-            _ioModel.WriteDataToCsv(_spectrumViewModel.Wavelengths,_chromatogramViewModel.Times,_spectrumViewModel.IntensityList.ToArray());
+            _ioModel.WriteDataToCsv(_spectrumViewModel.GetRawWavelengths(),_chromatogramViewModel.Times,_spectrumViewModel.GetRawIntensities());
         }
         public ICommand OpenFileCommand { get; }
         public void OpenFile()

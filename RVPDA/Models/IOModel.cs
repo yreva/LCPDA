@@ -217,14 +217,14 @@ namespace RVPDA.Models
             }
             var a = _filePath;
 
-            var m = a.ToUpper().Replace(".RAW","_Masses.csv");
-            var t = a.ToUpper().Replace(".RAW","_Times.csv");
-            var i = a.ToUpper().Replace(".RAW", "_Spectra.csv");
+            var m = a.Substring(0,a.Length-4) + "_PDA_wavelengths.csv";
+            var t = a.Substring(0,a.Length-4) + "_PDA_times.csv";
+            var i = a.Substring(0,a.Length-4) + "_PDA_spectra.csv";
 
             using (StreamWriter writer = new StreamWriter(i))
             {
                 int rows = intensity.GetLength(0);
-                int cols = intensity.GetLength(1);
+                int cols = intensity[0].GetLength(0);
 
                 for (int j = 0; j < rows; j++)
                 {

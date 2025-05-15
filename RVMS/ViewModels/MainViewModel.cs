@@ -125,6 +125,20 @@ namespace RVMS.ViewModels
 
                 _currentScanNumber = (int)value;
                 OnPropertyChanged(nameof(CurrentScanNumber));
+                OnPropertyChanged(nameof(CurrentRetentionTime));
+            }
+        }
+
+        public string CurrentRetentionTime
+        {
+            get
+            {
+                if (_chromatogramViewModel.Times == null)
+                {
+                    return "";
+                }
+                double rt = Math.Round(_chromatogramViewModel.Times[_currentScanNumber-1],2);
+                return string.Format("Retention Time: {0} min", rt);
             }
         }
 

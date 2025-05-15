@@ -127,6 +127,15 @@ namespace RVPDA.ViewModels
             GetPDASpectra();
         }
 
+        public double[] GetRawWavelengths()
+        {
+            return wavelengthsRaw;
+        }
+
+        public double[][] GetRawIntensities()
+        {
+            return intensityListRaw.ToArray();
+        }
 
         private void GetPDASpectra()
         {

@@ -196,9 +196,9 @@ namespace RVMS.Models
             }
             var a = _filePath;
 
-            var m = a.ToUpper().Replace(".RAW","_Masses.csv");
-            var t = a.ToUpper().Replace(".RAW","_Times.csv");
-            var i = a.ToUpper().Replace(".RAW", "_Spectra.csv");
+            var m = a.Substring(0,a.Length - 4) + "_MS_masses.csv";
+            var t = a.Substring(0,a.Length - 4) + "_MS_times.csv";
+            var i = a.Substring(0,a.Length - 4) + "_MS_spectra.csv";
 
             using (StreamWriter writer = new StreamWriter(i))
             {
