@@ -435,7 +435,7 @@ namespace RVMS.Models
 
 
             plt.XLabel("Retention Time / min");
-            plt.YLabel("Wavelength / nm");
+            plt.YLabel("m/z");
             plt.Axes.AutoScale();
 
             _chromatogramPlot.Refresh();
