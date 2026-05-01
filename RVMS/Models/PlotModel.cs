@@ -920,8 +920,8 @@ namespace RVMS.Models
             {
                 ChromatogramOptionsView view = new ChromatogramOptionsView();
 
-                view.Top = Application.Current.MainWindow.Top;
-                view.Left = Application.Current.MainWindow.Left + Application.Current.MainWindow.Width;
+                view.Owner = Application.Current.MainWindow;
+                view.WindowStartupLocation = WindowStartupLocation.CenterOwner;
 
                 view.Show();
 
@@ -956,8 +956,8 @@ namespace RVMS.Models
             {
                 SpectrumOptionsView view = new SpectrumOptionsView();
 
-                view.Top = Application.Current.MainWindow.Top + Application.Current.MainWindow.Height - view.Height;
-                view.Left = Application.Current.MainWindow.Left + Application.Current.MainWindow.Width;
+                view.Owner = Application.Current.MainWindow;
+                view.WindowStartupLocation = WindowStartupLocation.CenterOwner;
 
                 view.Show();
 

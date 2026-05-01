@@ -168,6 +168,8 @@ namespace RVMS.Views
         {
             var DC = DataContext as MainViewModel;
             ResolutionDialogue dialog = new ResolutionDialogue(DC.MassResolutionDecimal);
+            dialog.Owner = Application.Current.MainWindow;
+            dialog.WindowStartupLocation = WindowStartupLocation.CenterOwner;
             if (dialog.ShowDialog() == true)
             {
                 string filePath = DC.SelectedFilePath;
@@ -184,8 +186,8 @@ namespace RVMS.Views
             var DC = DataContext as MainViewModel;
             ScalingDialogue dialog = new ScalingDialogue(PlotSettings.Instance.Chromatogram.MapScaling);
 
-            dialog.Left = this.Left - 200;
-            dialog.Top = this.Top;
+            dialog.Owner = Application.Current.MainWindow;
+            dialog.WindowStartupLocation = WindowStartupLocation.CenterOwner;
 
             if (dialog.ShowDialog() == true)
             {
@@ -198,6 +200,8 @@ namespace RVMS.Views
         {
             var DC = DataContext as MainViewModel;
             ColormapSettingsDialogue dialog = new ColormapSettingsDialogue(DC.GetColormapSetting());
+            dialog.Owner = Application.Current.MainWindow;
+            dialog.WindowStartupLocation = WindowStartupLocation.CenterOwner;
 
             dialog.Left = this.Left - 300;
             dialog.Top = this.Top;
@@ -212,6 +216,8 @@ namespace RVMS.Views
         private void ChangeMassRange(object sender, RoutedEventArgs e)
         {
             LimitMassRangeView dialog = new LimitMassRangeView();
+            dialog.Owner = Application.Current.MainWindow;
+            dialog.WindowStartupLocation = WindowStartupLocation.CenterOwner;
             if (dialog.ShowDialog() == true)
             {
 
@@ -221,8 +227,8 @@ namespace RVMS.Views
         public void About_Click(object sender, RoutedEventArgs e)
         {
             About aboutWindow = new About();
-            aboutWindow.Top = this.Top;
-            aboutWindow.Left = this.Left + this.Width;
+            aboutWindow.Owner = Application.Current.MainWindow;
+            aboutWindow.WindowStartupLocation = WindowStartupLocation.CenterOwner;
             if (aboutWindow.ShowDialog() == true)
             {
                 //
